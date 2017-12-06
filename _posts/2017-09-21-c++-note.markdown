@@ -1,0 +1,407 @@
+---
+layout:     post
+title:      "STL 笔记 四"
+subtitle:   迁移自我的csdn
+date:       2017-09-21
+author:     "Iwiii"
+header-img: "img/post-bg-unix-linux.jpg"
+tags:
+    - C++
+    - STL
+---
+
+> This document is not completed and will be updated anytime.
+
+
+# 一个万用的Hash Function
+```cpp
+#include<functional>
+class Customer{
+	...
+};
+
+class CustomerHash{
+public:
+	std::size_t operator()(const Customer& c)const{
+		return ...
+	}
+};
+
+unordered_set<Customer,CustomerHash>custset;
+
+//另一种形式
+size_t customer_hash_func(const Customer& c){
+	return ...
+}
+
+unordered_set<Customer,size_t(*)(const Customer&)>custset(20,customer_hash_func);
+
+//第三种形式
+//对hash<T>写一个特化版本
+template<>
+struct hash<Mystring>{
+...
+}
+```
+我们在这里讨论上面代码中'...'中应该怎么做.
+```cpp
+//简单的相加
+return std::hash<std::string>()(c.fname)+
+       std::hash<std::string>()(c.fname)+...;
+//容易产生碰撞,降低查找效率了.
+```
+
+```cpp
+//1
+template<typename... Types>//C++11 新语法 不定量的参数拆解
+inline size_t hash_val(const Types&... args){
+	size_t seed = 0;
+	hash_val(seed,args...);
+	return seed;//seed 最终被视为hash code;
+}
+//2
+template<typename T,typename... Types>
+inline void hash_val(size_t& seed,const T& val,const Types&... args){
+	hash_combine(seed,val);
+	hash_val(seed,args...);//逐一取val 改变seed 通过pass by reference,当只剩下一个args的时候调用3,完成了递归
+}
+
+//3
+template<typename T>
+inline void hash_val(size_t& seed,const T& val){
+	hash_combine(seed,val);
+}
+
+//4
+template<typename T>
+inline void hash_combine(size_t& seed,const T& val){
+	seed^=std::hash<T>()(val)+0x9e3779b9+(seed<<6)+(seed>>2);
+}//0x9e3779b9和黄金比例有关
+
+
+class CustomerHash{
+public:
+	std::size_t operator()(const Customer& c)const{
+		return hash_val(c.fname,c.lname,c.no);
+	}
+};
+```
+
+## tuple (一堆东西的组合)用例
+
+```cpp
+//G4.8 节录并简化
+template<typename... Values>class tuple;
+template<>class tuple<>{};
+template<> class tuple<>{};
+template<typename Head,typename... Tail>
+class tuple<Head,Tail...>:private tuple<Tail...>//在从此处一再一再的继承 尾部
+{
+   typedef tuple<Tail...> inherited;
+ public;
+   tuple(){}
+   tuple(Head v,Tail... vtail)
+   :m_head(v),inherited(vtail...){}//呼叫base ctor 并予参数(不是创建temp object)
+   typename Head:type head(){return m_head;}
+   inherited& tail(){return *this;}//转型为inherited 指针指着除了head的其他部分,这个地方考虑 继承关系下的内存,数据排布
+ protected:
+   Head m_head;//头部类型声明了一个变量
+}
+```
+```cpp
+
+// tuple example
+#include <iostream>     // std::cout
+#include <tuple>        // std::tuple, std::get, std::tie, std::ignore
+
+int main ()
+{
+  std::tuple<int,char> foo (10,'x');
+  auto bar = std::make_tuple ("test", 3.1, 14, 'y');
+
+  std::get<2>(bar) = 100;                                    // access element
+
+  int myint; char mychar;
+
+  std::tie (myint, mychar) = foo;                            // unpack elements
+  std::tie (std::ignore, std::ignore, myint, mychar) = bar;  // unpack (with ignore)
+
+  mychar = std::get<3>(bar);
+
+  std::get<0>(foo) = std::get<2>(bar);
+  std::get<1>(foo) = mychar;
+
+  std::cout << "foo contains: ";
+  std::cout << std::get<0>(foo) << ' ';
+  std::cout << std::get<1>(foo) << '\n';
+
+  return 0;
+}
+```
+
+## type traits
+```cpp
+//G2.9
+struct __true_type{};
+struct __false_type{};
+
+template<class type>
+struct __type_traits{
+   typedef __true_type this dummy_member_must_be_first;
+   typedef __false_type this_trivial_default_constructor;
+   typedef __false_type this_trivial_copy_constructor;
+   typedef __false_type this_trivial_assignment_operator;
+   typedef __false_type this_trivial_destructor;
+   typedef __false_type is_POD_type;//Plain Old Data
+}
+//我们根据自己的需要对相应类型做特化 改变里面的true_type 和false_type;
+```
+
+
+但是在C++11中type traits 有了较大的变化.
+具体介绍看下面链接[type trait](http://www.cplusplus.com/reference/type_traits/)
+
+在这里提供了大量可以直接用的type features,比G2.9省事许多.
+### 关于实现细节
+```cpp
+//remove_const
+template<typename _Tp>
+struct remove_const{
+typedef _Tp type;};
+};
+
+template<typename _Tp>
+struct remove_const<_Tp const>
+{ typedef _Tp type;};
+
+//remove_volatile
+template<typename _Tp>
+struct remove_volatile{
+typedef _Tp type;
+};
+
+template<typename _Tp>
+struct remove_volatile<_Tp volatile>{
+typedef _Tp type;
+};
+
+//remove_cv
+struct remove_cv{
+typedef typename remove_const<typename remove_volatile<_Tp>::type>::type type;
+};
+
+template<typename>
+struct __is_void_helper:public false_type{};
+
+template<>
+struct __is_void_helper<void>:public true_type{};
+
+//is void
+template<typename _Tp>
+struct is_void:public __is_void_helper<typename remove_cv<_Tp>::type>::type{};
+
+```
+以上是比较简单的运用特化就可以做到.
+但是例如`is_class,is_union,is_enum,is_pod` 源码中存在一些不能参透的方法,推测是编译器使用的.
+我查了我自己编译器的源码如下
+```cpp
+// is_enum
+
+#if __has_feature(is_enum) || (_GNUC_VER >= 403)
+
+template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_enum
+    : public integral_constant<bool, __is_enum(_Tp)> {};
+
+#else
+
+template <class _Tp> struct _LIBCPP_TYPE_VIS_ONLY is_enum
+    : public integral_constant<bool, !is_void<_Tp>::value&&!is_integral<_Tp>::value&&!is_floating_point<_Tp>::value&&!is_array<_Tp>::value&&!is_pointer<_Tp>::value &&!is_reference<_Tp>::value &&!is_member_pointer<_Tp>::value   &&!is_union<_Tp>::value  &&!is_class<_Tp>::value &&!is_function<_Tp>::value > {};
+
+#endif
+
+```
+
+关于`intergral_constant`是这样定义的
+```cpp
+// helper class:
+
+template <class _Tp, _Tp __v>
+struct _LIBCPP_TYPE_VIS_ONLY integral_constant
+{
+    static _LIBCPP_CONSTEXPR const _Tp      value = __v;
+    typedef _Tp               value_type;
+    typedef integral_constant type;
+    _LIBCPP_INLINE_VISIBILITY
+        _LIBCPP_CONSTEXPR operator value_type() const _NOEXCEPT {return value;}
+#if _LIBCPP_STD_VER > 11
+    _LIBCPP_INLINE_VISIBILITY
+         constexpr value_type operator ()() const _NOEXCEPT {return value;}
+#endif
+};
+```
+不难看出起决定作用的是`__v`  也就是`__is_enum`,卡在此处,找不到与它相关的.
+
+## cout
+关于cout 还是看cplusplus上的比较详细,内容也不是太多 [cout](http://www.cplusplus.com/reference/iostream/cout/?kw=cout)
+
+## moveable 元素对于容器效能的影响
+### 对于vector速度影响
+插入300万moveable和non-moveable元素所用时间,moveable元素需要的时间要少的多
+### 对于list
+插入300万moveable和non-moveable元素所用时间,差不太多
+### 对于deque
+插入300万moveable和non-moveable元素所用时间,差不太多
+### 对于multiset
+插入300万moveable和non-moveable元素所用时间,差不太多
+### 对于unordered_multiset
+插入300万moveable和non-moveable元素所用时间,差不太多
+
+造成这样差别的原因是moveable元素 进行的move ctor,拷贝指针较快,vector的成长方式双倍增长会有大量元素移动,这样就会有很大开销如果用拷贝构造,但是用move的话只是拷贝了指针这样很快,但要记住用了move后不要再使用已经被销毁的指针了.这种方法也承担着风险.
+
+还是看代码比较有说服力
+构建一个moveable的元素类
+```cpp
+class Mystring{
+public:
+static size_t Dctor;  //default-ctor 呼叫次数
+static size_t Ctor;   //ctor ...     呼叫次数
+static size_t Cctor;   //copy-ctor   呼叫次数
+static size_t CAsgn;   //copy-asgn   呼叫次数
+static size_t MCtor;   //move-ctor   呼叫次数
+static size_t MAsgn;   //move-asgn
+static size_t Dctor;   //dtor        呼叫次数
+
+	
+private:
+	char* _data;
+	size_t _len;
+	void _init_data(const char *s){
+		_data = new char[len+1];
+		memcpy(_data,s,_len);
+		_data[_len] = '\0';
+	}
+public:
+	//default ctor
+	Mystring():_data(NULL),_len(0){++Dctor;}
+	//ctor
+	Mystring(const char*p) : _len(strlen(p)){
+		++Ctor;
+		_init_data(p);
+	}
+	//copy ctor
+	Mystring(const Mystring&str):_len(str.len){
+		++CCtor;
+		_init_data(str._data);//COPY
+	}
+	//move ctor with "noexcept"
+	Mystring(Mystring&& str) noexcept:_data(str._data),_len(str._len){
+		++MCtor;
+		str._len=0;
+		str._data = NULL ;//(避免 delete(in dtor))
+	}
+
+	//copy assignment
+	Mystring& operator = (const Mystring& str){
+		++CAsgn;
+		if (this!=&str)
+		{
+			if (_data) delete _data;
+			_len = str._len;
+			_init_data(str._data);//copy
+			
+		}
+		else{
+
+		}
+		return *this;
+	}
+
+	//move assignment
+	Mystring& operator = (Mystring&& str) noexcept{
+		++MAsgn;
+		if (this!=&str)
+		{if (_data)
+		{
+			delete _data;
+			_len = str._data;
+			_data = str._data; //在此处 move了 区别在这里 没有 init_data 直接 =
+			str._len=0;
+			str._data = NULL;//避免delete (in dtor)
+		}
+		}
+		return *this;
+	}
+
+//为了以rb_tree为底层的容器 因为它插入时要比较大小的 它是个二叉树
+//
+	bool operator <(const Mystring& rhs) const{
+		return std::string(this->_data)<std::string(rhs._data);
+
+	}
+
+	bool operator ==(const Mystring& rhs) const{
+		return std::string(this->_data) ==std::string(rhs._data);
+
+	}
+
+	char *get() const {return _data;}
+};
+ size_t Dctor =0; //default-ctor 呼叫次数
+ size_t Ctor =0;  //ctor ...     呼叫次数
+ size_t Cctor=0;   //copy-ctor   呼叫次数
+ size_t CAsgn=0;  //copy-asgn   呼叫次数
+ size_t MCtor=0;  //move-ctor   呼叫次数
+ size_t MAsgn=0;  //move-asgn
+ size_t Dctor=0;  //dtor        呼叫次数
+
+namespace std //必须放在std内
+{
+	template<>
+	struct hash<MyString>{
+		size_t
+		operator()(const MyString&s ) const noexcept{
+			return hash<string>()(string(s.get());)//借用现有的hash<string>
+		}
+	}
+}
+```
+
+### vector的 copy ctor
+```cpp
+vector(const vector& __x)
+:_Base(__x.size(),_Alloc_traits::_S_select_on_copy(__x._M_get_Tp_allocator())){
+this->_M_impl._M_finish+std::__uninitialized_copy_a(__x.begin(),__x.end(),this->_M._impl._M_start,_M_get_Tp_allocator());
+}
+```
+
+### vector 的move ctor
+```cpp
+//关键函数
+void _M_swap_data(_Vector _impl& __x)
+{
+std::swap(_M_start,__x._M_start);
+std::swap(_M_finish,__x._M_finish);
+std::swap(_M_end_of_storage,__x.M_end_of_storage);
+}
+
+_Vector_base(_Vector_base&& __x)noexcept:_M_impl(std::move(__x.M_get_TP_allocator())){
+this->_M_impl._M_swap_data(_x._M_impl);
+}
+
+
+vector(vector&& __x)noexcept:_Base(std::move(__x)){}
+//最终还是swap
+//c++11的swap,
+template <class T> void swap (T& a, T& b)
+{
+  T c(std::move(a)); a=std::move(b); b=std::move(c);
+}
+template <class T, size_t N> void swap (T &a[N], T &b[N])
+{
+  for (size_t i = 0; i<N; ++i) swap (a[i],b[i]);
+}
+//这样一看最核心的还是std::move
+```
+
+
+

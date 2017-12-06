@@ -1,0 +1,261 @@
+---
+layout:     post
+title:      "STL 笔记 一"
+subtitle:   迁移自我的csdn
+date:       2017-08-24
+author:     "Iwiii"
+header-img: "img/post-bg-unix-linux.jpg"
+tags:
+    - C++
+    - STL
+---
+
+> This document is not completed and will be updated anytime.
+
+
+# STL笔记 一
+***
+
+#### C++Standard Library 与 Standard Template Library 简要了解
+
+> *C++ Standard Library*
+
+>C++标准库，C++ Standard Library，是类库和函数的集合，其使用核心语言写成，由c++标准委员会制定，并不断维护更新。
+这样做的直接好处包括：
+1. 成本：已经作为标准提供，不必再花费时间、人力重新开发。
+2. 质量：标准库的都是经过严格测试的，正确性有保证。
+3. 效率：关于人的效率已经体现在成本中了，关于代码的执行效率要相信实现标准库的前辈的水平。
+4. 良好的编程风格：采用行业中普遍的做法进行开发。
+
+***
+
+>*Standard Template Library*
+>
+>STL是Standard Template Library的简称，中文名标准模板库，惠普实验室开发的一系列软件的统称。它是由Alexander Stepanov、Meng Lee和David R Musser在惠普实验室工作时所开发出来的。从根本上说，STL是一些“容器”的集合，这些“容器”有list,vector,set,map等，STL也是算法和其他一些组件的集合。这里的“容器”和算法的集合指的是世界上很多聪明人很多年的杰作。STL的目的是标准化组件，这样就不用重新开发，可以使用现成的组件。STL现在是C++的一部分，因此不用安装额外的库文件。
+STL的版本很多，常见的有HP STL、PJ STL、 SGI STL等。
+在C++标准中，STL被组织为下面的17个头文件：`<algorithm>、<deque>、<functional>、<iterator>、<array>、<vector>、<list>、<forward_list>、<map>、<unordered_map>、<memory>、<numeric>、<queue>、<set>、<unordered_set>、<stack>和<utility>`。
+*标准库以header files形式呈现*
+
+ - C++标准库的header files 不带副档名(.h),例如include<vector>
+ - 新式C header files 不带副档名(.h),例如`#include<vector>`
+ - 旧式C header files(带有副档名.h)仍然可用,例如`#include<stdio.h>`
+ - 新式headers内的组件封装于namespace "std"
+  - `using namespace std;`or
+  - `using std::cout;`(for example)
+ - 旧式headers内的组件不封装于namespace "std"
+ 
+ 重要网页:
+ [cpluspluc.com](www.cplusplus.com)
+ [cppreference.com](en.cppreference.com)
+ [gcc.gnu.org](gcc.gnu.org)
+
+***
+#### STL 六大部件
+
+ - 容器(Containers)
+ >在实际的开发过程中，数据结构本身的重要性不会逊于操作于数据结构的算法的重要性，当程序中存在着对时间要求很高的部分时，数据结构的选择就显得更加重要。
+经典的数据结构数量有限，但是我们常常重复着一些为了实现向量、链表等结构而编写的代码，这些代码都十分相似，只是为了适应不同数据的变化而在细节上有所出入。STL容器就为我们提供了这样的方便，它允许我们重复利用已有的实现构造自己的特定类型下的数据结构，通过设置一些模板类，STL容器对最常用的数据结构提供了支持，这些模板的参数允许我们指定容器中元素的数据类型，可以将我们许多重复而乏味的工作简化。
+容器部分主要由头文件`<vector>,<list>,<deque>,<set>,<map>,<stack><queue>`组成。
+
+ - 分配器(Allocators)
+>在C++编程中，分配器（英语：allocator）是C++标准库的重要组成部分。C++的库中定义了多种被统称为“容器”的数据结构（如链表、集合等），这些容器的共同特征之一，即是其大小可以在程序的运行时改变；为了实现这一点，进行动态内存分配就显得尤为必要，在此分配器就用于处理容器对内存的分配与释放请求。换句话说，于分配器用封装STL容器在内存管理上的低层细节。默认情况下，C++标准库使用其自带的通用分配器，但根据具体需要，程序员也可自行定制分配器以替代之。
+分配器最早由亚历山大·斯特潘诺夫作为C++标准模板库（Standard Template Library，简称STL）的一部分发明，其初衷是创造一种能“使库更加灵活，并能独立于底层数据模型的方法”，并允许程序员在库中利用自定义的指针和引用类型；但在将标准模板库纳入C++标准时，C++标准委员会意识到对数据模型的完全抽象化处理会带来不可接受的性能损耗，为作折中，标准中对分配器的限制变得更加严格，而有鉴于此，与斯特潘诺夫原先的设想相比，现有标准所描述的分配器可定制程度已大大受限。
+虽然分配器的定制有所限制，但在许多情况下，仍需要用到自定义的分配器，而这一般是为封装对不同类型内存空间（如共享内存与已回收内存）的访问方式，或在使用内存池进行内存分配时提高性能而为。除此以外，从内存占用和运行时间的角度看，在频繁进行少量内存分配的程序中，若引入为之专门定制的分配器，也会获益良多。
+
+ - 算法(Algorithms)
+ >算法（Algorithm）是指解题方案的准确而完整的描述，是一系列解决问题的清晰指令，算法代表着用系统的方法描述解决问题的策略机制。也就是说，能够对一定规范的输入，在有限时间内获得所要求的输出。如果一个算法有缺陷，或不适合于某个问题，执行这个算法将不会解决这个问题。不同的算法可能用不同的时间、空间或效率来完成同样的任务。一个算法的优劣可以用空间复杂度与时间复杂度来衡量。
+算法中的指令描述的是一个计算，当其运行时能从一个初始状态和（可能为空的）初始输入开始，经过一系列有限而清晰定义的状态，最终产生输出并停止于一个终态。一个状态到另一个状态的转移不一定是确定的。随机化算法在内的一些算法，包含了一些随机输入。
+
+ - 迭代器(Iterators)
+ >迭代器（iterator）是一种对象，它能够用来遍历标准模板库容器中的部分或全部元素，每个迭代器对象代表容器中的确定的地址。迭代器修改了常规指针的接口，所谓迭代器是一种概念上的抽象：那些行为上像迭代器的东西都可以叫做迭代器。然而迭代器有很多不同的能力，它可以把抽象容器和通用算法有机的统一起来。
+迭代器提供一些基本操作符：*、++、==、!=、=。这些操作和C/C++“操作array元素”时的指针接口一致。不同之处在于，迭代器是个所谓的复杂的指针，具有遍历复杂数据结构的能力。其下层运行机制取决于其所遍历的数据结构。因此，每一种容器型都必须提供自己的迭代器。事实上每一种容器都将其迭代器以嵌套的方式定义于内部。因此各种迭代器的接口相同，型号却不同。这直接导出了泛型程序设计的概念：所有操作行为都使用相同接口，虽然它们的型别不同。
+ 
+ 
+ - 适配器(Adapters)
+ >c++中的适配器有三种：容器适配器，迭代器适配器，函数适配器下面一一介绍
+
+ >1.容器适配器：具体的有stack，queue，priority_queue,默认的情况下，stack和queue基于deque而实现的，priority_queue在vector上实现的，可以根据第二个实参指定容器的类型，但一定要符合标准，queue要求要有push_front操作因此不能建立在vector上面，priority_front要求有随机访问的功能，因此建立在vector上面。优先级队列默认采用 `<` 排序的
+>
+>2.迭代适配器:插入器是一种迭代器适配器，带有一个容器参数，并生成一个迭代器，提供了三种插入器
+>
+>3.函数适配器，用于扩展一元和二元函数对象
+绑定器：是一种函数适配器，它通过将一个一个操作数绑定到给定值而将二元函数对象转换为一元函数对象，bind1st,和bind2nd分别将二元函数对象绑定到第一个参数和第二个参数，由此将二元操作转换成一元操作
+
+ >求反器：标准库定义了两个求反器not1，not2分别针对于一元函数和二元函数
+ - 仿函数(functors)
+>在我们写代码时有时会发现有些功能实现的代码，会不断的在不同的成员函数中用到，但是又不好将这些代码独立出来成为一个类的一个成员函数。但是又很想复用这些代码。写一个公共的函数，可以，这是一个解决方法，不过函数用到的一些变量，就可能成为公共的全局变量，再说为了复用这么一片代码，就要单立出一个函数，也不是很好维护。这时就可以用仿函数了，写一个简单类，除了那些维护一个类的成员函数外，就只是实现一个operator()，在类实例化时，就将要用的，非参数的元素传入类中。这样就免去了对一些公共变量的全局化的维护了。又可以使那些代码独立出来，以便下次复用。而且这些仿函数，还可以用关联，聚合，依赖的类之间的关系，与用到他们的类组合在一起，这样有利于资源的管理（这点可能是它相对于函数最显著的优点了）。如果在配合上模板技术和policy编程思想，那就更是威力无穷了，大家可以慢慢的体会。
+
+***
+#### STL六大部件的关系
+Container（容器） 通过 allocator（配置器） 取得数据储存空间，algorithm（算法）通过 iterator（迭代器）存取 container（容器） 内容，functor（仿函数） 可以协助 algorithm（算法） 完成不同的策略变化，adapter（配接器） 可以修饰或套接 functor（仿函数）。如下图：
+![摘自<<STL 源码剖析>> 1.2节](http://img.blog.csdn.net/20170824171831735?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd2VpeGluXzM5MDI5NTUy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+简单示例:
+
+```
+#include <iostream>
+#include <vector>
+int main () {
+
+    int ia[6] = {27,210,12,47,109,83};
+    vector<int,allocator<int>>vi(ia,ia+6);//vector 是容器 container 用vector需要#include<vector> 容器要有分配器
+    cout<<count_if //algorithm
+            (                             //predicate
+                    vi.begin (),
+                    vi.end (),//iterator
+                    not1//function adapter(negator)
+                            (
+                              bind2nd (
+                              less//function object
+                              <int>(),40)//function adapter(binder)
+                             )
+            );
+    return 0;
+}
+```
+***
+#### 复杂度,Complexity,Big-oh
+
+##### 目前常见的big-oh 有下列几种情形
+ 1. O($1$)或O($c$):称为常熟时间(constant time)
+ 2. O($n$):称为线性时间(linear time)
+ 3. O($log_2 n$)称为次线性时间(sub-linear time)
+ 4. O($n^2$)称为平方时间(quadratic time)
+ 5. O($n^3$)称为立方时间(cubic time)
+ 6. O($2^n$)称为指数时间(exponential time)
+ 7. O($nlog_2n$):介于线性及二次方成长的中间之行为模式
+ 
+
+***
+#### 前闭后开区间
+*前闭后开区间 标准库容器 begin()指向第一个元素,end()指向最后一个元素的下一个位置  [    ) 所以不应该解引用 c.end()*
+```
+  Container<T> c;
+  Container<T>::iterator ite = c.begin();
+  for(; ite!=c.end();++ite) //遍历
+ 
+ 
+
+```
+***
+#### range-based for statement
+
+
+```
+  //C++11
+  for(decl:coll){
+  }
+  for(int i:{2,3,5,7,9,13,17,19}){
+    std::cout<<i<<std::endl;
+  }
+ 
+  std::vector<double> vec;
+  ...
+  
+  for(auto elem :vec){
+  ...
+  }
+  
+  for(auto& elem:vec{
+  ...
+  }
+```
+***
+#### auto keyword(since C++11)
+*根本是由右值类型推出左值类型*
+```
+list<string>c;
+...
+list<string>::iterator ite;
+ite = ::find(c.begin(),c.end,target);
+
+//简化为
+auto ite = ::find(c.begin(),c.end(),target);
+```
+
+***
+#### 容器-结构 与分类(左为cplusplus.com 手册链接,右为头文件)
+
+##### Sequence Containers
+ - [Array](http://www.cplusplus.com/reference/array/array/)  `<array>`
+ - [Vector](http://www.cplusplus.com/reference/vector/vector/)  `<vector>`
+ - [Deque](http://www.cplusplus.com/reference/deque/deque/)   `<deque>`
+ - [List](http://www.cplusplus.com/reference/list/list/)   `<list>`
+ - [stack](http://www.cplusplus.com/reference/stack/stack/)`stack`
+ - [queue](http://www.cplusplus.com/reference/queue/) `queue`
+ - [Forward-List](http://www.cplusplus.com/reference/forward_list/forward_list/)`<forward_list>`
+ ***
+##### Associative Containers(左为cplusplus.com 手册链接,右为头文件)
+*各家编译器都用红黑树来做*
+
+  - [ Set](http://www.cplusplus.com/reference/set/set/)/[Multiset](http://www.cplusplus.com/reference/set/multiset/)`<set>`
+  - [Map](http://www.cplusplus.com/reference/map/map/)/[Multiset](http://www.cplusplus.com/reference/map/multimap/)`<map>`
+##### Unordered Containers
+ - [Unordered Set/Multiset](http://www.cplusplus.com/reference/unordered_set/)`<unordered_set>`
+ - [Unordered Map/Multimap](http://www.cplusplus.com/reference/unordered_map/)`<unordered_map>`
+
+
+Hash Table(Separate Chaining)
+![Hash Table](http://img.blog.csdn.net/20170824183457580?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd2VpeGluXzM5MDI5NTUy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+Associative Containers优势在于查找,其实可以理解为牺牲了一些插入删除数据的效率,换来查找的效率,因为在存储的时候特殊的数据结构为查找做了铺垫
+
+
+>红黑树（Red Black Tree） 是一种自平衡二叉查找树，是在计算机科学中用到的一种数据结构，典型的用途是实现关联数组。
+它是在1972年由Rudolf Bayer发明的，当时被称为平衡二叉B树（symmetric binary B-trees）。后来，在1978年被 Leo J. Guibas 和 Robert Sedgewick 修改为如今的“红黑树”。
+红黑树和AVL树类似，都是在进行插入和删除操作时通过特定操作保持二叉查找树的平衡，从而获得较高的查找性能。
+它虽然是复杂的，但它的最坏情况运行时间也是非常良好的，并且在实践中是高效的： 它可以在O(log n)时间内做查找，插入和删除，这里的n 是树中元素的数目。
+>它的统计性能要好于平衡二叉树(有些书籍根据作者姓名，Adelson-Velskii和Landis，将其称为AVL-树)，因此，红黑树在很多地方都有应用。在C++ STL中，很多部分(包括set, multiset, map, multimap)应用了红黑树的变体(SGI STL中的红黑树有一些变化，这些修改提供了更好的性能，以及对set操作的支持)。其他平衡树还有：AVL，SBT，伸展树，TREAP 等等。
+
+
+#### 使用分配器 allocator
+
+```
+template<typename_Tp,typename_Alloc=std::allocator<_Tp>>
+class vector:protected_Vector_base<_Tp,_Alloc>
+```
+
+```
+template<typename_Tp,typename_Alloc=std::allocator<_Tp>>
+class list:protected_List_base<_Tp,_Alloc>
+```
+```
+template<typename_Key,typename_Compare=std::less<_key>,
+typename_Alloc = std::allocator<_Key>>
+```
+```
+template<typename_Key,typename_Tp,typename_Compare=std::less<_Key>
+typename_Alloc = std::allocator<std::pair<const_key,_Tp>>
+class map
+```
+```
+template<class_Value,
+         class_Hash=hash<_Value>,
+         class_Pred=std::equal_to<_Value>,
+         class_Alloc=std::allocator<_Value>>
+     class unordered_set     
+```
+```
+template<class_Key,class_Tp,
+          class_Hash=hash<_Key>,
+          class_Pred=std::equal_to<_Key>,
+          class_Alloc=std::allocator<std::pair<const_Key,_tp>>>
+     class unordered_map
+          
+```
+
+要使用std::allocator以外的allocator,得自行`#include<ext\...>`
+```
+#include <ext\array_allocator.h>
+#include <ext\mt_allocator.h>
+#include <ext\debug_allocator.h>
+#include <ext\pool_allocator.h>
+#include <ext\bitmap_allocator.h>
+#include <ext\malloc_allocator.h>
+#include <ext\new_allocator.h>
+
+```
+示例:
+```
+list<string,__gun_cxx::malloc_allocator<string>> c2;
+```

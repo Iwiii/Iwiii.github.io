@@ -1,0 +1,333 @@
+---
+layout:     post
+title:      "STL 笔记 三"
+subtitle:   迁移自我的csdn
+date:       2017-09-07
+author:     "Iwiii"
+header-img: "img/post-bg-unix-linux.jpg"
+tags:
+    - C++
+    - STL
+---
+
+> This document is not completed and will be updated anytime.
+
+
+##deque
+### deque概述
+
+> vector是单向开口的连续线性空间，deque则是一种双向开口的连续线性空间。所谓双向开口，意思是可以在头尾分别做元素的插入和删除操作。vector当然也可以在头尾两端进行操作，但是其头部操作效率奇差，无法接受。
+> 虽然deque也提供Random Access Iterator,但它的迭代器不是普通的指针,其复杂度比vector的复杂的多得多,这影响了各个运算层面,因为除非必要,我们应尽可能选择使用vector,而非deque.对deque进行的排序操作,为了最高效率,可将deque先完整复制到一个vector身上,将vector排序后,再复制会deque.
+
+### deque中控器
+deq采用一块所谓的map(不是STL的map容器)作为主控.这里所谓map是一小块连续空间,其中每个元素(节点,node)都是指针,指向另一端(较大的)连续线性空间,称为缓冲区.缓冲区才是deque存储空间的主题.SGI STL允许我们制定缓冲区大小,默认值0 表示将使用512bytes缓冲区.
+map其实就是一个指向指针的指针.
+![deque示意图](http://img.blog.csdn.net/20170905151050599?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd2VpeGluXzM5MDI5NTUy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+### deque的迭代器
+deque是分段连续空间.维持其"整体连续"假象的任务,落在了迭代器的operator++和operator--两个算子身上.
+deque需要具备的结构,首先,它必须能够指出分段连续空间(缓冲区)在哪里,其次它必须能够判断自己是否已经处于其所在的缓冲区的边缘,如果是,一旦前进或后退是就必须跳跃至下一个或上一个缓冲区,为了能够正确跳跃,deque必须随时掌握管控中心(map).
+```cpp
+//关键代码
+template<class T,class Ref,class Ptr,size_t Bufsiz>
+struct __deque_iterator//未继承std::iterator
+{
+...
+typedef T** map_pointer;
+typedef __deque_iterator self;
+//保持容器的联结
+T* cur;//此迭代器所指之缓冲区中的current元素
+T* first;//此迭代器所指之缓冲区的头;
+T* last;//此迭代器所指之缓冲区的尾
+map_pointer node;//指向管控中心
+...
+}
+
+//以下各个重载算子是 __deque_iterator<>成功的关键
+reference operator *() const (return *cur);
+pointer operator-> const {return &(operator*());}
+difference_type operator - (const self& x) const{
+	return difference_type(buffer_size())*(node-x.node-1)+(cur-fisrt)+(x.last-x.cur);
+}
+self & operator++(){
+	++cur;//切换到下一个元素
+	if (cur==last)//如果已打所在缓冲区的尾端
+	{		
+		set_node(node+1);//就切换到下一个结点的第一个元素
+		cur=first;
+	}
+	return *this
+}
+
+self operator++(int){
+	self tmp = *this;
+	++*this;
+	return tmp;
+}
+
+...//operator -- 同理
+
+//实现随机存取 迭代器可以直接跳过n个距离 
+self & operator+=(difference_type n){
+	difference_type offset = n+(cur-fisrt);
+	if (offset>=0 && offset<difference_type(buffer_size()))
+	{
+		//目标位置在同一缓冲区内.
+		cur +=n;
+	}else{
+		//位置不在同意缓冲区内
+		difference_type node_offset = offset>0?offset/difference_type(buffer_size()):
+		-difference_type((-offset-1)/buffer_size())-1;
+		//切换至正确的节点
+		set_node(node+node_offset);
+		//切换至正确的元素
+		cur = first+(offset-node_offset*difference_type(buffer_size)));
+
+	}
+	return *this;
+}
+
+//operator -=利用+=完成
+
+
+
+
+```
+###deque的数据结构
+deque出了维护一个先前说过的指向map的指针外,也维护start,finish两个迭代器,分别指向第一缓冲区的第一个元素和最后一个缓冲区的最后一个元素(的下一个位置).此外,它当然也必须记住目前map的大小.因为一旦map所提供的节点不足,就必须重新配置更大的一块map.
+
+##stack
+### 概述
+stack是一种先进后出的数据结构.它只有一个出口.stack不允许有遍历行为.
+若以deque为底部结构并封闭其头端开口,便轻易的形成了一个stack.因此,SGI STL便以deque作为缺省情况下的stack底部结构,stack的实现因而非常简单.
+由于stack系以底部容器完成其所有工作,而具有这种"修改某物接口,形成另一种风貌"之性质者,成为adapter,因此,STL stack往往不被归类为container,而被归类为container adapter
+### stack没有迭代器
+stack不提供走访功能,也不提供迭代器
+### 可以以list作为stack底层容器
+出了deque之外,list也是双向开口的数据结构.stack源码中使用的底层容器函数有empty,size,back,push_back,pop_back,凡此种种,list都具备
+
+## queue
+### 概述
+queue是一种先进先出的数据结构.它有两个出口.queue允许新增元素 移除元素 从最底端加入元素,取得最顶端元素.但除了最底端元素可以加入,最顶端可以取出外,没有任何其它方法可以存取queue的其它元素.换言之,queue不允许有遍历行为.
+同stack一样SGI STL也是咦deque作为queue的底层,queue也是container adapter
+### queue没有迭代器
+不提供遍历功能,不提供迭代器
+### 可以以list作为底部容器
+同上面stack相同
+
+之所以默认用deque是因为deque的效率比list高
+
+## 红黑树
+### 概述
+> 红黑树（Red Black Tree） 是一种自平衡二叉查找树，是在计算机科学中用到的一种数据结构，典型的用途是实现关联数组。
+它是在1972年由Rudolf Bayer发明的，当时被称为平衡二叉B树（symmetric binary B-trees）。后来，在1978年被 Leo J. Guibas 和 Robert Sedgewick 修改为如今的“红黑树”。
+红黑树和AVL树类似，都是在进行插入和删除操作时通过特定操作保持二叉查找树的平衡，从而获得较高的查找性能。
+它虽然是复杂的，但它的最坏情况运行时间也是非常良好的，并且在实践中是高效的： 它可以在O(log n)时间内做查找，插入和删除，这里的n 是树中元素的数目。
+### 红黑树的五个性质
+> 红黑树的五个性质：
+1）每个结点要么是红的，要么是黑的。
+2）根结点是黑的。
+3）每个叶结点，即空结点（NIL）是黑的。
+4）如果一个结点是红的，那么它的俩个儿子都是黑的。
+5）对每个结点，从该结点到其子孙结点的所有路径上包含相同数目的黑结点。
+### 用途
+> 红黑树和AVL树一样都对插入时间、删除时间和查找时间提供了最好可能的最坏情况担保。这不只是使它们在时间敏感的应用如即时应用(real time application)中有价值，而且使它们有在提供最坏情况担保的其他数据结构中作为建造板块的价值；例如，在计算几何中使用的很多数据结构都可以基于红黑树。
+红黑树在函数式编程中也特别有用，在这里它们是最常用的持久数据结构之一，它们用来构造关联数组和集合，在突变之后它们能保持为以前的版本。除了O(log n)的时间之外，红黑树的持久版本对每次插入或删除需要O(log n)的空间。
+红黑树是 2-3-4树的一种等同。换句话说，对于每个 2-3-4 树，都存在至少一个数据元素是同样次序的红黑树。在 2-3-4 树上的插入和删除操作也等同于在红黑树中颜色翻转和旋转。这使得 2-3-4 树成为理解红黑树背后的逻辑的重要工具，这也是很多介绍算法的教科书在红黑树之前介绍 2-3-4 树的原因，尽管 2-3-4 树在实践中不经常使用。
+### 详细参考
+[一步一图一代码，一定要让你真正彻底明白红黑树](http://blog.csdn.net/chenhuajie123/article/details/11951777)
+
+### 简要代码
+```cpp
+//template参数
+template<class Key,class Value,class KeyOfValue,class Compare,class Alloc = alloc>
+class rb_tree{
+protected:
+typedef __rb_tree_node<Value> rb_tree_node;
+...
+public:
+typedef rb_tree_node* link_type;
+...
+protected
+//RB-tree只以三笔资料表现自己
+size_type node_count;..rb_tree的大小,节点数量
+link_type header;
+Compare key_compare;//key的大小比较准则,应会是个function object;
+}
+```
+### 其它
+rb_tree提供"遍历"操作及iterators.按正常规则(++ite)遍历,便能获得排序状态.
+我们不应使用rb_tree的iterators改变元素值(因为元素有其严谨的排列规则).编程层面并未阻绝此事.如此设计师正确的,因为rb_tree 即将为set和map服务(作为其底部支持),而map允许元素的data被改变,只有元素的key才是不可被改变的.
+rb_tree提供两种insertion操作:insert_unique()和insert_equal().前者表示节点的key一定在整个tree中对无二,否则安插失败;后者表示节点的key可重复.
+
+## 容器 set
+set的特性是,所有元素都会根据元素的键值自动被排序.set的元素不像map那样可以同时拥有value和key,set元素的键值就是value,value就是键值.set不允许两个元素有相同的键值
+set的 iterators是一种constant iterators(相对于mutable iterators).
+由于RB-tree是一种平衡二叉搜索树,自动排序效果很不错,所以标准的STL set即以RB-tree为底层机制.又由于set所开放的各种操作接口,RB-tree也都提供了,所以几乎所有的set操作行为,都只是转调用RB-tree的操作行为而已.
+
+## map
+map的特性是,所有元素都会根据元素的键值自动被排序.map的所有元素都是pair,同事拥有value和key.pair的第一元素被视为key,第二元素被视为value.map不允许两个元素拥有相同的键值.
+下面是	`<stl_pair.h>`中pair定义:
+```cpp
+template<class T1,class T2>
+struct pair{
+typedef T1 first_type;
+typedef T2 second_type;
+T1 first;//注意 它是public
+T2 second;//注意 它是public
+pair():first(T1()),second(T2()){}
+pair(const T1&a,const T2&b):first(a),second(b){}
+};
+
+```
+
+我们不可以修正元素的key,因为key的值关系到map元素的排列规则.任意改变map元素值将会严重破坏map组织.但如果想要修正元素的value,就可以,因为元素的value不影响map的排列规则.因此,map iterators既不是一种constant iterators,也不是一种mutable iterators
+
+由于RB-tree是一种平衡二叉搜索树,自动排序效果很不错,所以标准的STL map即以RB-tree为底层机制.又由于map所开放的各种操作接口,RB-tree也都提供了,所以几乎所有的map操作行为,都只是转调用RB-tree的操作行为而已.
+
+## multiset
+multiset 的特性以及用法和set完全相同,唯一的差别在于它允许键值重复,因此它的插入操作采用的是底层机制RB-tree的insert_equal()而非insert_unique() .下面是mulitset的源代码提要,只列出于set不同之处:
+```cpp
+template<class Key,class Compare=less<key>,class Alloc = alloc>
+class multiset{
+public:
+//typedefs:
+...(与set相同)
+//allocation/deallocation
+//注意,multiset一定使用insert_equal()而不是insert_unique()
+//set才使用insert_unique()
+template<class InputIterator>
+multiset(InputIterator first,InputIterator last):t(Compare()){t.insert_equal(first,last);}
+template<class InputIterator>
+multiset<InputIterator first,InputIterator last,const Compare & comp)
+:t(comp){t.inset_equal(first,last);}
+...(其它与set相同)
+//insert/erase
+iterator insert(const value_type& x){
+return t.insert_equal(x):
+}
+iterator insert(iterator position,const value_type& x){
+typedef typename rep_type::iterator rep_iterator;
+return t.insert_equal((rep_iterator&)position,x);
+}
+template<class InputIterator>
+void insert(InputIterator first,InputIterator last){
+t.insert_equal(first,last);
+}
+...(其它与set相同)
+}
+```
+
+## multimap
+ multimap 的特性以及用法和map完全相同,唯一的差别在于它允许键值重复,因此它的插入操作采用的是底层机制RB-tree的insert_equal()而非insert_unique() .下面是mulitset的源代码提要,只列出与map不同之处:
+ 
+```cpp
+template<class Key,class Compare=less<key>,class Alloc = alloc>
+class multimap{
+public:
+//typedefs:
+...(与map相同)
+//allocation/deallocation
+//注意,multimap一定使用insert_equal()而不是insert_unique()
+//map才使用insert_unique()
+template<class InputIterator>
+multimap(InputIterator first,InputIterator last):t(Compare()){t.insert_equal(first,last);}
+template<class InputIterator>
+multimap<InputIterator first,InputIterator last,const Compare & comp)
+:t(comp){t.inset_equal(first,last);}
+...(其它与map相同)
+//insert/erase
+iterator insert(const value_type& x){
+return t.insert_equal(x):
+}
+iterator insert(iterator position,const value_type& x){
+return t.insert_equal(position.x);
+}
+template<class InputIterator>
+void insert(InputIterator first,InputIterator last){
+t.insert_equal(first,last);
+}
+...(其它与map相同)
+}
+```
+
+## hashtable
+二叉搜索树具有对数平均时间的表现,但这样的表现构造在一个假设上:输入数据有足够的随机性.而hashtable的数据结构在插入,删除,搜寻的操作上也具有"常数平均时间"的表现,而且这种表现是以统计为基础,不需要仰赖输入元素的随机性
+hash table可提供对任何有名相(named item)的存取操作和删除操作.由于操作对象是有名项,所以hashtable也可被视为一种dictionary.这种结构的用意在于提供常熟时间的基本操作,就像stack或queue那样.
+
+### 概述
+散列表（Hash table，也叫哈希表），是根据关键码值(Key value)而直接进行访问的数据结构。也就是说，它通过把关键码值映射到表中一个位置来访问记录，以加快查找的速度。这个映射函数叫做散列函数，存放记录的数组叫做散列表。
+给定表M，存在函数f(key)，对任意给定的关键字值key，代入函数后若能得到包含该关键字的记录在表中的地址，则称表M为哈希(Hash）表，函数f(key)为哈希(Hash) 函数。
+
+### 基本概念
+* 若关键字为k，则其值存放在f(k)的存储位置上。由此，不需比较便可直接取得所查记录。称这个对应关系f为散列函数，按这个思想建立的表为散列表。
+* 对不同的关键字可能得到同一散列地址，即k1≠k2，而f(k1)=f(k2)，这种现象称为碰撞（英语：Collision）。具有相同函数值的关键字对该散列函数来说称做同义词。综上所述，根据散列函数f(k)和处理碰撞的方法将一组关键字映射到一个有限的连续的地址集（区间）上，并以关键字在地址集中的“像”作为记录在表中的存储位置，这种表便称为散列表，这一映射过程称为散列造表或散列，所得的存储位置称散列地址。
+* 若对于关键字集合中的任一个关键字，经散列函数映象到地址集合中任何一个地址的概率是相等的，则称此类散列函数为均匀散列函数（Uniform Hash function），这就是使关键字经过散列函数得到一个“随机的地址”，从而减少碰撞。
+
+### 常用方法
+散列函数能使对一个数据序列的访问过程更加迅速有效，通过散列函数，数据元素将被更快地定位。
+实际工作中需视不同的情况采用不同的哈希函数，通常考虑的因素有：
+· 计算哈希函数所需时间
+· 关键字的长度
+· 哈希表的大小
+· 关键字的分布情况
+· 记录的查找频率
+1. 直接寻址法：取关键字或关键字的某个线性函数值为散列地址。即H(key)=key或H(key) = a·key + b，其中a和b为常数（这种散列函数叫做自身函数）。若其中H(key）中已经有值了，就往下一个找，直到H(key）中没有值了，就放进去。
+2. 数字分析法：分析一组数据，比如一组员工的出生年月日，这时我们发现出生年月日的前几位数字大体相同，这样的话，出现冲突的几率就会很大，但是我们发现年月日的后几位表示月份和具体日期的数字差别很大，如果用后面的数字来构成散列地址，则冲突的几率会明显降低。因此数字分析法就是找出数字的规律，尽可能利用这些数据来构造冲突几率较低的散列地址。
+3. 平方取中法：当无法确定关键字中哪几位分布较均匀时，可以先求出关键字的平方值，然后按需要取平方值的中间几位作为哈希地址。这是因为：平方后中间几位和关键字中每一位都相关，故不同关键字会以较高的概率产生不同的哈希地址。[2] 
+例：我们把英文字母在字母表中的位置序号作为该英文字母的内部编码。例如K的内部编码为11，E的内部编码为05，Y的内部编码为25，A的内部编码为01, B的内部编码为02。由此组成关键字“KEYA”的内部代码为11052501，同理我们可以得到关键字“KYAB”、“AKEY”、“BKEY”的内部编码。之后对关键字进行平方运算后，取出第7到第9位作为该关键字哈希地址
+4. 折叠法：将关键字分割成位数相同的几部分，最后一部分位数可以不同，然后取这几部分的叠加和（去除进位）作为散列地址。数位叠加可以有移位叠加和间界叠加两种方法。移位叠加是将分割后的每一部分的最低位对齐，然后相加；间界叠加是从一端向另一端沿分割界来回折叠，然后对齐相加。
+5. 随机数法：选择一随机函数，取关键字的随机值作为散列地址，通常用于关键字长度不同的场合。
+6. 除留余数法：取关键字被某个不大于散列表表长m的数p除后所得的余数为散列地址。即 H(key) = key MOD p,p<=m。不仅可以对关键字直接取模，也可在折叠、平方取中等运算之后取模。对p的选择很重要，一般取素数或m，若p选的不好，容易产生同义词。
+
+### 开链(separate chaining)
+开链法是在每一个表格中维护一个list:hash function为我们分派某一个list,然后我们在那个list身上执行元素的插入,搜寻,删除等操作.虽然针对list而进行的搜寻只能是一种线性操作,但如果list够短,速度还是够快的.
+
+### hashtable的buckets与nodes
+![SGI STL hash](http://img.blog.csdn.net/20170907151313287?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd2VpeGluXzM5MDI5NTUy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+### hashtable 模板参数
+#### hashtable的数据结构
+```cpp
+template<class Value,class Key,class HashFcn,class ExtractKey,class EqualKey,class Alloc>
+class hashtable{
+public:
+typedef HashFcn hasher;
+typedef EqualKey key_equal;
+typedef size_t size_type;
+private:
+//以下三者都是function objects.<stl_hash_fun.h>中定义有数个标准type(int,c-style string)的hasher
+typedef __hashtable_node<Value>node;
+typedef simple_alloc<node,Alloc>node_allocator;
+vector<node*,Alloc>buckets;//以vector完成
+size_type num_elements;
+public:
+//bucket个数即buckets vector的大小
+size_type bucket_count()const{return buckets.size();}
+...
+};
+```
+#### hashtable的模板参数
+* Value:结点的实值型别
+* Key:节点的键值型别
+* HashFcn:hash function的函数型别
+* ExtractKey:从节点中取出键值的方法(函数或仿函数).
+* EqualKEy:判断键值相同与否的方法(函数或仿函数)
+* Alloc:空间配置器,缺省使用std::alloc
+
+虽然开链法并不要求表格大小必须为质数,但SGI STL仍然以质数来设计表格大小,并先将28个质数(逐渐呈现大约两倍的关系)计算好,以备随时访问,同时提供一个函数,用来查询在这28个质数之中,"最接近某数并大于某数"的质数.
+
+### tips:hashtable扩容的效率不高,需要所有元素重排,所以初始化设置表格大小设置为合适的数量级就挺重要.
+
+## hash_set/unordered_set (since C++ 11)
+虽然STL只规范复杂度和接口,并不规范实现方法,但STL set 多半以RB-tree为底层机制.SGI则在STL标准规格之外又提供了一个所谓的hash_set.以hashtable为底层机制上.由于hash_set 所供应的操作接口,hashtable都提供了,所以几乎所有的hash_set操作行为,都只是转调用hashtable的操作行为而已.
+
+set元素有自动排序功能,而hash_set没有.
+
+## hash_map/unordered_map(since C++11)
+虽然STL只规范复杂度和接口,并不规范实现方法,但STL map多半以RB-tree为底层机制.SGI则在STL标准规格之外又提供了一个所谓的hash_map.以hashtable为底层机制上.由于hash_map 所供应的操作接口,hashtable都提供了,所以几乎所有的hash_map操作行为,都只是转调用hashtable的操作行为而已.
+
+map元素有自动排序功能,而hash_map没有.
+
+## hash_multiset   hash_multimap /unordered_multiset unordered_multimap(since C++11)
+它们与不带hash_set hash_map的唯一差别 就是它们采用的底层机制是hashtable的insert_equal(),后者是insert_unique();

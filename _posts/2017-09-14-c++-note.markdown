@@ -1,0 +1,610 @@
+---
+layout:     post
+title:      "STL 笔记 四"
+subtitle:   迁移自我的csdn
+date:       2017-09-14
+author:     "Iwiii"
+header-img: "img/post-bg-unix-linux.jpg"
+tags:
+    - C++
+    - STL
+---
+
+> This document is not completed and will be updated anytime.
+
+
+# 算法
+
+## STL 算法总览
+(以下 质变 栏意指mutating,意思是 会改变其操作对象之内容)
+
+| 算法名称 | 算法用途 | 质变? | 所在文件|
+|:------------|:-----------------------|:-------------------|
+|accumulate|元素累计|否|`<stl_numeric.h>`|
+|adjacent_difference|相邻元素的差额|是 if in-place|`<stl_numeric.h>`|
+|adjacent_find|查找相邻而重复(或符合某条件)的元素|否|`<stl_algo.h>`|
+|binary_search|二分查找|否|<`stl_algo.h>`|
+|Copy|复制|是 if in-place|`<stl_algobase.h>`|
+|Copy_backward|逆向复制|是 if in-place|`<stl_algobase.h>`|
+|count|计数|否|`<stl_algo.h>`|
+|count_if|在特定条件下计数|否|`<stl_algo.h>`|
+|equal|判断两个区间相等与否|否|`<stl_algobase.h>`|
+|equal_range|试图在有序区间中寻找某值(返回一个上下限区间)|否|`<stl_algo.h>`|
+|fill|该填元素值|是|`<stl_algobase.h>`|
+|fill_n|该填元素值,n次|是|`<stl_algobase.h>`|
+|find|循序查找|否|`<stl_algo.h>`|
+|find_if|循序查找符合特定条件者|否|`<stl_algo.h>`|
+|find_end|查找某个子序列的最后一次出现点|否|`<stl_algo.h>`|
+|find_first_of|查找某些元素的首次出现点|否|`<stl_algo.h>`|
+|for_each|对区间内的每一个元素施行某操作|否|`<stl_algo.h>`|
+|generate|以特定操作之运算结果填充特定区间内的元素|是|`<stl_algo.h>`|
+|generate_n|以特定操作之运算结果填充n个元素内容|是|`<stl_algo.h>`|
+|includes|是否涵盖于某序列之中|否|`<stl_algo.h>`|
+|inner_product|内积|否|`<stl_algo.h>`|
+|inplace_merge|合并并就地替换(覆写上去)|是|`<stl_algo.h>`|
+|lexicographical_compare|以字典顺序进行比较|否|`<stl_numeric.h>`|
+|lower_bound|"将置顶元素插入区间之内而不影响区间之原本排序"的最低位置|否|`<stl_algo.h>`|
+|max|最大值|否|`<stl_algobase.h>`|
+|max_element|最大值所在位置|否|`<stl_algobase.h>`|
+|merge|合并两个序列|是 if-inplace|`<stl_algo.h>`|
+|min|最小值|否|`<stl_algobase.h>`|
+|min_element|最小值所在位置|否|`<stl_algo.h>`|
+|mismatch|找出不匹配点|否|`<stl_algobase.h>`|
+|next_permutation|获得下一个排列组合|是|
+|nth_element|重新安排序列中第n个元素的左右两端|是|`<stl_algo.h>`|
+|partial_sort|局部排序|是|`<stl_algo.h>`|
+|partial_sort_copy|局部排序并复制到它处|是 if in-place|`<stl_algo.h>`|
+|partial_sum|局部求和|是 if in-place|`<stl_numberic.h>`|
+|partition|分割|是|`<stl_algo.h>`|
+|prev_permutation|获得前一个排列组合|是|`<stl_algo.h>`|
+|random_shuffle|随机重排元素|是|`<stl_algo.h>`|
+|remove|删除某类元素(但不删除)|是|`<stl_algo.h>`|
+|remove_copy|删除某类元素并将结果复制到另一个容器|是|`<stl_algo.h>`|
+|remove_if|有条件地删除某类元素|是|`<stl_algo.h>`|
+|remove_copy_if|有条件地删除某类元素并将结果复制到另一个容器|是|`<stl_algo.h>`|
+|replace|替换某类元素|是|`<stl_algo.h>`|
+|replace_copy|替换某类元素,并将结果复制到另一个容器|是|`<stl_algo.h>`|
+|replace_if|有条件地替换|是|`<stl_algo.h>`|
+|replace_copy_if|有条件地替换,并将结果复制到另一个容器|
+|reverse|反转元素次序|是|`<stl_algo.h>`|
+|reverse_copy|反转元素次序并将结果复制到另一个容器|是|`<stl_algo.h>`|
+|rotate|旋转|是|`<stl_algo.h>`|
+|rotate_copy|旋转并将结果复制到另一个容器|是|`<stl_algo.h>`|
+|search|查找某个子序列|是|`<stl_algo.h>`|
+|search_n|查找"连续发生n次"的子序列|是|`<stl_algo.h>`|
+|set_difference|差集|是 if in-place|`<stl_algo.h>`|
+|set_intersection|交集|是 if in-place|`<stl_algo.h>`|
+|set_symmetric_difference|对称差集|是 if in-place|`<stl_algo.h>`|
+|set_union|并集|是 if in-place|`<stl_algo.h>`|
+|sort|排序|是|`<stl_algo.h>`|
+|stable_partition|分割并保持元素的相对次序|是|`<stl_algo.h>`|
+|stable_sort|排序并保持等值元素的相对次序|是|`<stl_algo.h>`|
+|swap|交换(对调)|是|`<stl_algobase.h>`|
+|swap_ranges|交换(指定区间)|是|`<stl_algo.h>`|
+|transform|以两个序列为基础,交互作用产生第三个序列|是|`<stl_algo.h>`|
+|unique|将重复的元素折叠缩编,使成唯一|是|`<stl_algo.h>`|
+|unique_copy|将重复元素折叠缩编,使成唯一,并复制到他出|是 if in-place|`<stl_algo.h>`|
+|upper_bound|"将指定元素插入区间之内而不影响区间之原本排序"的最高位置|否|`<stl_algo.h>`|
+|make_heap|制造一个heap|是|`<stl_heap.h>`|
+|pop_heap|从heap取出一个元素|是|`<stl_heap.h>`|
+|push_heap|将一个元素推进heap内|是|`<stl_heap.h>`|
+|sort_heap|对heap排序|是|`<stl_heap.h>`|
+
+## STL算法的一般形式
+所有泛型算法的前两参数都是一堆迭代器(iterators),通常称为first和last,用以标示算法的操作区间.STL习惯采用前闭后开区间(或称左涵盖区间)表示法,写成[first,last),表示区间涵盖first至last(不含last)之间的所有元素.当first==last时马上述所表现的便是一个空区间
+这个[first,last)区间的必要条件是,必须能够经由increment(累加)操作符的反复运用,从first到达last.编译器本身无法强求这一点.如果这个条件不成立,会导致未可预期的结果.
+根据行进特性,迭代器可分为五类.每一个STL算法的声明,都表现出它所需要的最低程度的迭代器类型.例如find()需要一个InputIterator,这是它的最低要求,但它可以接受更高类型的迭代器,如ForwardIterator,BidirectionalIterator或RandomAccessIterator,因为他们相对于InputIterator是is-a关系.但如果你交给find()一个OutputIterator,会导致错误.
+将无效的迭代器传给某个算法,虽然是一种错误,却不保证能够在编译湿气就被捕捉出来,因为所谓"迭代器类型"并不是真实的型别,它们只是function template的一种型别参数(type parameters).
+质变算法通常提供两个版本:一个是in-place版,就地改变其操作对象;另一个是copy版,将操作对象的内容复制一份副本,然后在副本上进行修改并返回该副本.
+
+### 测试Iterator类型
+```cpp
+#include <iostream>     // std::cout
+#include <iterator>     // std::iterator_traits
+#include <typeinfo>     // typeid
+namespace jj33
+{
+void _display_category(random_access_iterator_tag)
+{   cout << "random_access_iterator" << endl; }
+void _display_category(bidirectional_iterator_tag)
+{   cout << "bidirectional_iterator" << endl; }
+void _display_category(forward_iterator_tag)
+{   cout << "forward_iterator" << endl;  }
+void _display_category(output_iterator_tag)
+{   cout << "output_iterator" << endl;   }
+void _display_category(input_iterator_tag)
+{   cout << "input_iterator" << endl;    }
+
+template<typename I>
+void display_category(I itr)
+{
+   typename iterator_traits<I>::iterator_category cagy;
+   _display_category(cagy);
+   
+   cout << "typeid(itr).name()= " << typeid(itr).name() << endl << endl;   
+       //The output depends on library implementation.
+       //The particular representation pointed by the  
+       //returned valueis implementation-defined, 
+       //and may or may not be different for different types.   
+}
+    
+void test_iterator_category()
+{
+    cout << "\ntest_iterator_category().......... \n";
+    
+    display_category(array<int,10>::iterator());
+    display_category(vector<int>::iterator());
+    display_category(list<int>::iterator());    
+    display_category(forward_list<int>::iterator());  
+    display_category(deque<int>::iterator());
+
+    display_category(set<int>::iterator());
+    display_category(map<int,int>::iterator());
+    display_category(multiset<int>::iterator());
+    display_category(multimap<int,int>::iterator());
+    display_category(unordered_set<int>::iterator());
+    display_category(unordered_map<int,int>::iterator());
+    display_category(unordered_multiset<int>::iterator());
+    display_category(unordered_multimap<int,int>::iterator());    
+            
+    display_category(istream_iterator<int>());
+    display_category(ostream_iterator<int>(cout,""));
+}                                                            
+}
+```
+
+### 迭代器与算法
+
+ Iterator提供了一种方法，将容器和算法分开独立设计，再用Iterator连接到一起。它最重要的编程工作是对* 和 - 的重载.
+
+由Iterator 的相应类别(associated type) 可以引入了利用function templeate 的参数推导机制，这是traits的prerequisite. 在template类中如果typedef T value_type 便可用这个property作为要生成的变量或函数返回值的类型。但这种方法并不适用于非class type, 非class type没有内嵌类型。“并不是所有迭代器都是class type”。traits技法把所有的associated type封装到一个structure里，通过partial specialization 指定相应偏特化类型的associated type。迭代器有五个associated types，分别是 value type, difference type, reference type, pointer type, 和 iterator_category.
+
+iterator_category 是讨论起来相对最复杂的。迭代器分为5类，input iterator, output iterator, forward iterator, bedirectional iterator, and random access iterator. 设计算法时，我们尽量对某种迭代器提供一个明确的定义，并针对更强化的某种迭代器提供另一种定义，对每个函数确保传入最准确的迭代器。这里的例子是，对每种迭代器类型都有自己structure，并对每个structure定义相应的重载函数，调用函数是传入一个临时实例以出发重载机制，同时，以此可以消除只用来判断类型随后传递调用的函数。
+
+std::iterator是STL规范的保证，如果每个新设计的迭代器都继承自它，就可以保证符合STL规范。总结：设计适当的相应性别(associated type)  是迭代器的责任。设计适当的迭代器是容器的责任。唯容器本身才知道设计出怎样的迭代器来遍历自己，并执行迭代器该有的各种行为。
+
+SGI STL内部使用了__type_traits来萃取type的型别特性，这里关注的有trivial_default_constructor, trivial_copy_constructor, trivial_copy_constructor, trivial_assignment_constructor, trivial_destructor, and POD_type. 对trivial进行最有效率的措施，也就是说直接的内存操作。有显著效率提升。
+
+## 算法代码剖析 (以下代码来自于www.cplusplus.com)
+### accumulate
+```cpp
+//版本1
+template<class InputIterator,class T>
+T accumulate(InputIterator first,InputIterator last,T init){
+for( ;first!=last;++first)
+   init = init + *first;//将每个元素值累加到init身上
+return init;
+}
+
+//版本2
+template<class InputIterator,class T,class BinaryOperation>
+T accumulate(InputIterator first,InputIterator last,T init,BinaryOperation binary_op){
+for( ;first!=last;++first)
+init = binary_op(init,*first);//对每一个元素执行二元操作
+return init;
+}
+```
+
+### for_each
+```cpp
+template<class InputIterator, class Function>
+  Function for_each(InputIterator first, InputIterator last, Function fn)
+{
+  while (first!=last) {
+    fn (*first);//遍历每次调用fn
+    ++first;
+  }
+  return fn;      // or, since C++11: return move(fn);
+}
+```
+### replace,replace_if,replace_copy 
+XXX_if :加条件
+XXX_copy:复制到别的容器
+```cpp
+template <class ForwardIterator, class T>
+  void replace (ForwardIterator first, ForwardIterator last,
+                const T& old_value, const T& new_value)
+{
+  while (first!=last) {
+    if (*first == old_value) *first=new_value;
+    ++first;
+  }
+}
+
+template < class ForwardIterator, class UnaryPredicate, class T >
+  void replace_if (ForwardIterator first, ForwardIterator last,
+                   UnaryPredicate pred, const T& new_value)
+{
+  while (first!=last) {
+    if (pred(*first)) *first=new_value;//所有pred()为true都以new_value取代
+    ++first;
+  }
+}
+
+template <class InputIterator, class OutputIterator, class T>
+  OutputIterator replace_copy (InputIterator first, InputIterator last,
+                               OutputIterator result, const T& old_value, const T& new_value)
+{
+  while (first!=last) {
+    *result = (*first==old_value)? new_value: *first;//没有对容器进行写的操作,只写了result,从代码上可以看出是如果和old_value相等,则把一个new_value赋给result,也就是放入新区间了.
+    ++first; ++result;
+  }
+  return result;
+}
+```
+
+### count,count_if
+```cpp
+template <class InputIterator, class T>
+  typename iterator_traits<InputIterator>::difference_type
+    count (InputIterator first, InputIterator last, const T& val)
+{
+  typename iterator_traits<InputIterator>::difference_type ret = 0;
+  //遍历 如果元素值相等,计数器加1;
+  while (first!=last) {
+    if (*first == val) ++ret;
+    ++first;
+  }
+  return ret;
+}
+
+template <class InputIterator, class UnaryPredicate>
+  typename iterator_traits<InputIterator>::difference_type
+    count_if (InputIterator first, InputIterator last, UnaryPredicate pred)
+{
+  typename iterator_traits<InputIterator>::difference_type ret = 0;
+  while (first!=last) {
+    if (pred(*first)) ++ret;//这里改了条件,如果pred()为true,计数器加1,所以可以通过pred这个参数改条件
+    ++first;
+  }
+  return ret;
+}
+/*
+容器中不带成员函数的count():
+array,vector,list,forward_list,deque,
+容器中带有成员函数count():
+set/multisset,map/multimap,unordered_set/unordered_multiset,unordered_map/unordered_multimap
+*/
+```
+
+### find,find_if
+```cpp
+template<class InputIterator, class T>
+  InputIterator find (InputIterator first, InputIterator last, const T& val)
+{
+  while (first!=last) {
+    if (*first==val) return first;
+    ++first;
+  }
+  return last;
+}
+
+template<class InputIterator, class UnaryPredicate>
+  InputIterator find_if (InputIterator first, InputIterator last, UnaryPredicate pred)
+{
+  while (first!=last) {
+    if (pred(*first)) return first;
+    ++first;
+  }
+  return last;
+}
+/*
+容器中不带成员函数的find():
+array,vector,list,forward_list,deque,
+容器中带有成员函数find():
+set/multisset,map/multimap,unordered_set/unordered_multiset,unordered_map/unordered_multimap
+*/
+```
+
+### sort
+```cpp
+// sort algorithm example
+#include <iostream>     // std::cout
+#include <algorithm>    // std::sort
+#include <vector>       // std::vector
+
+bool myfunction (int i,int j) { return (i<j); }
+
+struct myclass {
+  bool operator() (int i,int j) { return (i<j);}
+} myobject;
+
+int main () {
+  int myints[] = {32,71,12,45,26,80,53,33};
+  std::vector<int> myvector (myints, myints+8);               // 32 71 12 45 26 80 53 33
+
+  // using default comparison (operator <):
+  std::sort (myvector.begin(), myvector.begin()+4);           //(12 32 45 71)26 80 53 33
+
+  // using function as comp
+  std::sort (myvector.begin()+4, myvector.end(), myfunction); // 12 32 45 71(26 33 53 80)
+
+  // using object as comp
+  std::sort (myvector.begin(), myvector.end(), myobject);     //(12 26 32 33 45 53 71 80)
+
+  // print out content:
+  std::cout << "myvector contains:";
+  for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it)
+    std::cout << ' ' << *it;
+  std::cout << '\n';
+
+  return 0;
+}
+
+//Output:
+//myvector contains: 12 26 32 33 45 53 71 80
+
+//只有list,forward_list带成员函数sort()
+```
+
+#### 关于reverse iterator,rbegin(),rend
+```cpp
+
+reverse_iterator
+rbegin(){
+return reverse_iterator(end());
+}
+reverse_iterator
+rend(){
+return reverse__]iterator(begin());
+}
+//这是iterator adapter
+```
+
+### binary_search
+binary_search 一定要先排序
+```cpp
+template <class ForwardIterator, class T>
+  bool binary_search (ForwardIterator first, ForwardIterator last, const T& val)
+{
+  first = std::lower_bound(first,last,val);//一说应该把!(val<*first)放在这一行前面判断效率会更高,可以省去不必要的lower_bound调用效率更高.
+  return (first!=last && !(val<*first));
+}
+
+
+//二分在这里
+template <class ForwardIterator, class T>
+  ForwardIterator lower_bound (ForwardIterator first, ForwardIterator last, const T& val)
+{
+  ForwardIterator it;
+  iterator_traits<ForwardIterator>::difference_type count, step;
+  count = distance(first,last);
+  while (count>0)
+  {
+    it = first; step=count/2; advance (it,step);
+    if (*it<val) {                 // or: if (comp(*it,val)), for version (2)
+      first=++it;
+      count-=step+1;
+    }
+    else count=step;
+  }
+  return first;
+}
+```
+## 仿函数
+存在的意义,要通过它把相应的动作传给算法
+### 算术类(Arithmetic)
+```cpp
+template<class T>
+struct plus:public binary_function<T,T,T>{
+T operator() const T& x,const T& y) const{return x+y;}
+};
+
+template<class T>
+struct minus:public binary_function<T,T,T>{
+T operator() const T& x,const T& y) const{return x-y;}
+};
+```
+
+### 逻辑运算类(Logical)
+```cpp
+template<class T>
+struct logical_and:public binary_function<T,T,bool>{
+bool operator() const T& x,const T& y) const{return x&&y;}
+};
+```
+### 相对关系类(Relational)
+```cpp
+template<class T>
+struct equal_to:public binary_function<T,T,bool>{
+bool operator() const T& x,const T& y) const{return x==y;}
+};
+
+template<class T>
+struct less:public binary_function<T,T,bool>{
+bool operator() const T& x,const T& y) const{return x<y;}
+};
+```
+### 仿函数functors的可是配条件
+```cpp
+//STL规定每个Adaptable Function都应挑选适当者继承之.继承了typedef.函数适配器可能需要用到.要和STL体系融合就要满足该条件
+
+template<class Arg,class Result>
+struct unary_function{//一个操作数
+typedef Arg argument_type;
+typedef Result result_type;
+};
+
+template<class Arg1,class Arg2,class Result>
+struct binary_function{//两个操作数
+typedef Arg1 first_argument_type;
+typedef Arg2 second_argument_type;
+typedef Result result_type;
+};
+```
+
+## 存在多种 Adapters
+配接器(adapters)在STL组件的灵活组合运用功能上,扮演着轴承,转换器的角色.Adapeter这个概念,事实上是一种设计模式:将一个class的接口转换为另一个class接口,使原本因接口不兼容而不能合作的classes,可以一起运作.
+### 分类
+
+#### 应用于容器 container adapters
+STL提供两个容器queue和stack,其实都值不够是一种adapter.他们修饰deque的接口而成就出另一种容器的风貌.前面笔记有讲.
+
+#### 应用于迭代器 iterator adapters
+STL提供了许多应用于迭代器身上的adapters,包括insert iterators,reverse iterators,iostream iterators.C++ standard规定它们的接口可以藉由<iterator>获得,SGI STL则将它们实际定义于<stl_iterator.h>
+##### Insert Iterators
+所谓 insert iterators,可以将一般迭代器的赋值操作转变为插入操作.这样的迭代器包括专司尾端插入操作的back_insert_iterator,专司头端插入操作的front_insert_iterator,以及可以从任意位置执行插入操作的insert_iterator.由于这三个iterator adapters的使用接口不是十分只管,给一般用户带来困扰,因此STL更提供三个相应函数如下表所示,提升使用时的便利性
+|辅助函数(helper function)|实际产生的对象|
+|:---|:---|
+|back_inserter(Container& x);|back_insert_iterator<Container>(x);|
+|front_inserter(Container& x);|front_insert_iterator<Container>(x);|
+|inserter(Container& x,Iterator i);|insert_iterator<Container>(x,Container::iterator(i));|
+
+##### Reverse Iterators
+所谓reverse iterators,可以将一般迭代器的行进方向逆转,使原本应该前进的operator++变成后退操作,使原本应该后退的operator--变成了前进操作.这种性质用在"从尾端开始进行"的算法上,有很大的方便性
+
+##### IOStream iterator
+所谓iostream iterators,可以将迭代器绑定到某个iostream对象上.绑定到istream对象(例如std::cin)身上的,称为isstream_iterator,拥有输入功能;绑定到ostream对象(如std::cout)身上的,称为ostream_iterator,拥有输出功能.这种迭代器运用于屏幕输出,非常方便.以它为蓝图,稍加修改,便可适用于任何输出或输入装置上.
+
+下面是一个实例,集上述三种iterator adapters之运用大成:
+```cpp
+#include <iostream>
+#include <iterator> //for iterator adapters
+#include <deque>
+#include <algorithm>//for copy()
+using namespace std;
+int main () {
+   //将outite绑定到cout.每次对outite指派一个元素,就后接一个" ".
+    ostream_iterator<int> outite(cout," ");
+    int ia[] ={0,1,2,3,4,5};
+    deque<int> id{ia,ia+6};
+    //将所有元素拷贝到outite(那么也就是拷贝到cout)
+    copy(id.begin (),id.end (),outite);//输出 0 1 2 3 4 5
+    cout<<endl;
+
+    //将ia[]的部分元素拷贝到id内.使用front_insert_iterator
+    //注意front_insert_itergtor会将assign操作改为push_front操作
+    //vector不支持push_front(),这就是本例不以vector为示范对象的原因.
+    copy(ia+1,ia+2,front_inserter(id));
+    copy(id.begin (),id.end (),outite);// 1 0 1 2 3 4 5
+    cout<<endl;
+
+    //将ia[]的部分元素拷贝到id内,使用back_insert_iterator
+    copy (ia+3,ia+4,back_inserter (id));
+    copy(id.begin (),id.end (),outite);// 1 0 1 2 3 4 5 3
+
+    //搜寻元素5所在位置
+    deque<int>::iterator ite = find(id.begin(),id.end(),5);
+    //将ia[]的部分元素拷贝到id内,使用isnert_iterator
+    copy (ia+0,ia+3,inserter (id,ite));
+    copy(id.begin(),id.end(),outite);//1 0 1 2 3 4 0 1 2 5 3
+    cout<<endl;
+    //将所有元素你想拷贝到outtite
+    //rbegin()和rend()与reverse_iterator有关
+    copy (id.rbegin (),id.rend (),outite);//3 5 2 1 0 4 3 2 1 0 1
+    cout<<endl;
+    
+    //以下,将inite绑定到cin.将元素拷贝到inite,知道eos出现
+    istream_iterator<int> inite(cin),eos;//eos:end-of-stream
+    copy (inite,eos,insert_iterator(id,id.begin ()));
+    //由于很难再键盘上直接输入end-of-stream符号,而且不同系统的eof符号也不尽相同,因此
+    //为了让上一行顺利执行.请单独取出此段落为一个独立程序,并准备一个文件例如int.dat,内置
+    //32 26 99(自由格式),并在console之下用piping方式执行该程序,如下:
+    //c:\>type int.dat | thisprog
+    //意思是将type int.dat的结果作为thisprog的输入
+    copy(id.begin (),id.end (),outite);//32 26 99 1 0 1 2 3 4 0 1 2 5 3
+
+}
+```
+#### 应用于仿函数 functor adapters
+```cpp
+//bind2nd &binder2nd
+template <class Operation, class T>
+  binder2nd<Operation> bind2nd (const Operation& op, const T& x)
+{
+  return binder2nd<Operation>(op, typename Operation::second_argument_type(x));//typename Operation::second_argument_type(x)这里进行检测参数对不对,把op和typename Operation::second_argument_type(x)传给binder2nd
+}
+
+template <class Operation> class binder2nd
+  : public unary_function <typename Operation::first_argument_type,
+                           typename Operation::result_type>
+{
+protected:
+  Operation op;//内部成员,分别用以记录算式和第二实参
+  typename Operation::second_argument_type value;
+public:
+  binder2nd ( const Operation& x,
+              const typename Operation::second_argument_type& y) : op (x), value(y) {}
+  typename Operation::result_type
+    operator() (const typename Operation::first_argument_type& x) const
+    { return op(x,value); }//实际呼叫算式并取value为第二实参. 在这里问询了result_type
+};
+
+// bind2nd example
+#include <iostream>
+#include <functional>
+#include <algorithm>
+using namespace std;
+
+int main () {
+  int numbers[] = {10,-20,-30,40,-50};
+  int cx;
+  cx = count_if ( numbers, numbers+5, bind2nd(less<int>(),0) );
+  cout << "There are " << cx << " negative elements.\n";
+  return 0;
+}
+```
+##### 新型适配器 bind
+...\include\c++\backward\backward_warning.h
+A list of valid replacements is as follows:
+|Use|Instead of|
+|:---------|:------------|
+|`<sstresm>,basic_stringbuf`|`<sstresm>,strstreambuf`|
+|`<sstream>,basic_istringstream`|`<strstream>,istrstream`|
+|`<sstresm>,basic_ostringstream`|`<sstresm>,ostrtream`|
+|`<sstresm>,basic_stringstream`|`<sstresm>,strstream`|
+|`<unordered_set>,unordered_set`|`<ext/hash_set>,hash_set`|
+|`<unordered_set>,unordered_multiset`|`<ext/hash_set>,hash_multiset`|
+|`<unordered_map>,unordered_map`|`<ext/hash_map>,hash_map`|
+|`<unordered_map>,unordered_multimap`|`<ext/hash_set>,hash_multimap`|
+|`<function>,bind`|`<functional>,binder1st`|
+|`<function>,bind`|`<functional>,binder2nd`|
+|`<function>,bind`|`<functional>,bind1st`|
+|`<function>,bind`|`<functional>,bind2nd`|
+|`<memory>,unique_ptr|`<memory>,auto_ptr`|
+
+```cpp
+
+
+// bind example
+#include <iostream>     // std::cout
+#include <functional>   // std::bind
+
+// a function: (also works with function object: std::divides<double> my_divide;)
+double my_divide (double x, double y) {return x/y;}
+
+struct MyPair {
+  double a,b;
+  double multiply() {return a*b;}
+};
+
+int main () {
+  using namespace std::placeholders;    // adds visibility of _1, _2, _3,...占位符_1 _2 _3
+
+  // binding functions:
+  auto fn_five = std::bind (my_divide,10,2);               // returns 10/2
+  std::cout << fn_five() << '\n';                          // 5
+
+  auto fn_half = std::bind (my_divide,_1,2);               // returns x/2
+  std::cout << fn_half(10) << '\n';                        // 5
+
+  auto fn_invert = std::bind (my_divide,_2,_1);            // returns y/x
+  std::cout << fn_invert(10,2) << '\n';                    // 0.2
+
+  auto fn_rounding = std::bind<int> (my_divide,_1,_2);     // returns int(x/y)
+  std::cout << fn_rounding(10,3) << '\n';                  // 3
+
+  MyPair ten_two {10,2};
+
+  // binding members:
+  auto bound_member_fn = std::bind (&MyPair::multiply,_1); // returns x.multiply()
+  std::cout << bound_member_fn(ten_two) << '\n';           // 20
+
+  auto bound_member_data = std::bind (&MyPair::a,ten_two); // returns ten_two.a
+  std::cout << bound_member_data() << '\n';                // 10
+
+  return 0;
+}
+```
+
+

@@ -1,0 +1,501 @@
+---
+layout:     post
+title:      "STL 笔记 二"
+subtitle:   迁移自我的csdn
+date:       2017-08-31
+author:     "Iwiii"
+header-img: "img/post-bg-unix-linux.jpg"
+tags:
+    - C++
+    - STL
+---
+
+> This document is not completed and will be updated anytime.
+
+
+### OOP(Object-Oriented programming) VS. GP(Generic Programming)
+* OOP企图将datas 和 methods 关联在一起
+数据放在类里面,操作这些数据的函数也放在类里面
+
+```cpp
+template<class T,class Alloc = alloc>
+class list{
+...
+void sort();
+}
+```
+为什么list不能使用`::sort()` 排序?
+先看标准库sort()源码
+```cpp
+template<class RandomAccessIterator>
+inline void sort(RandomAccessIterator first,RandomAccessIterator last{
+if(first!=last){
+__introsort_loop(first,last,value_type(first),__lg(last-first)*2);
+__final_insertion_sort(first,last);
+}
+}
+
+template<class RandomAccessIterator,class T,class Size>
+void __introsort_loop(RandomAccessIterator first,Random AccessIterator last,
+T*,Size depth_limit){
+...
+RandomAccessIterator cut = __unguarded_partition(first,last,T(__median(*first,*(first+(last-first)/2,*(last-1))));//只有 RandomAccessIterator 才能如此操作
+...
+}
+```
+[RandomAccessIterator相关概念](http://zh.cppreference.com/w/cpp/concept/RandomAccessIterator)
+list链表的数据结构导致它提供的迭代器不符合.因为随机访问迭代器 (RandomAccessIterator) 是能在常数时间内移动到指向任何元素的双向迭代器 (BidirectionalIterator) 。而链表的的访问时线性的,不具有跳跃性.因为它得一个个访问下一个.
+
+
+* GP却是要将datas 和 methods 分开来
+  * Containers和Algorithms 团队可各自闭门造车,其间以Iterator沟通即可.
+  * Algorithms通过Iterators 确定操作范围,并通过Iterators取用Containers元素.
+  
+  ```c++
+  template<class T>
+  inline const T& min(const T& a,const T& b){
+  return b<a?b:a;
+  }
+  ```
+以上面代码为例,函数 min 不需要知道`class T`的细节,`T`只要自己实现好`<`的操作符重载即可.
+
+*tips:所有algorithms,其内最终涉及元素本身的操作,无非就是比大小 *
+  
+  
+```cpp
+template<class T,class Compare>
+inline const T& max(const T&a,const T& b,Compare comp){
+return comp(a,b)?b:a;
+}
+
+bool strLonger(const string& s1,const string& s2){
+return s1.size() < s2.size();
+}
+
+max(string("zoo"),string("hello"),strLonger);
+}
+```
+
+### operator overloading
+Customizes the C++ operators for operands of user-defined typed.
+
+##### 句法:
+ [Overloaded operators](http://en.cppreference.com/w/cpp/language/operators) 是具有特殊函数名字的函数
+```cpp
+operator op            //(1)
+operator type          //(2)
+operator new
+operator new[]         //(3)
+operator delete
+operator ddelete[]     //(4)
+operator "" suffix-identifier //(5)  since C++11
+/*
+1) 重载的运算符；
+2) 用户定义的转换函数；
+3) 分配函数；
+4) 解分配函数；
+5) 用户定义字面量。
+*/
+```
+
+op	-	下列 38 个运算符之一： 
+```
++ - * / % ˆ & | ~ ! = < > += -= *= /= %= ˆ= &= |= << >> >>= <<= == != <= >= && || ++ -- , ->* -> ( ) [ ]
+```
+
+ 限制
+1. 不能重载运算符 `::` （作用域解析）、` .` （成员访问）、` .*` （通过指向成员指针的成员访问）及 `?:` （三元条件）。
+2. 不能创建新运算符，例如 `**` 、 `<>` 或 `&|` 。
+3. 运算符 `&&` 与 `||` 的重载失去短路求值。
+4. 重载的运算符 `->` 可以抛出裸指针或同样重载了运算符 `->` 的对象（以引用或值）。
+5. 不可能更改运算符的优先级、结合或运算数数量。
+
+![示例](http://img.blog.csdn.net/20170829194940124?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd2VpeGluXzM5MDI5NTUy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+
+### Class Templates,类模板
+```cpp
+template <typename T>//这样就告诉编译器T是未定的
+class complex
+{
+public:
+complex(T r=0,T i=0):re(r),im(i_{}
+private:
+T re,im;
+};
+//使用方式:complex<double> c1(2.5,1.5);
+```
+
+### Function Templates,函数模板
+```cpp
+class stone{
+...
+bool operator<(const stone& rhs) const{
+...
+}
+};
+template <class T>
+inline T& min(const T&a,const T& b){
+retrun b<a?b:a;
+}
+
+stone r1(2,3),r2(3,3),r3;
+r3 = min(r1,r2);
+//第二行编译器会对function template进行 实参推导
+//实参推导的结果T为stone,于是调用`stone::operator<()`
+```
+
+### Member Templates,成员模板
+
+
+### Specialization,特化
+```cpp
+struct __true_type{};
+struct __false_type{}:
+```
+```cpp
+//泛化
+template<class type>
+struct __type_traits{
+typedef __true_type this_dummy_member_must_be_first;
+typedef __false_type has_trivial_default_constructor;
+typedef __false_type has_trivial_copy_constructor;
+typedef __false_type has_trivial_assignment_operator;
+typedef __false_type has_trivial_destructor;
+typedef __false_type is_POD_type;
+```
+```cpp
+//特化
+template<> struct __type_traits<double>{
+typedef __true_type has_trivial_default_constructor;
+typedef __true_type has_trivial_copy_constructor;
+typedef __true_type has_trivial_assignment_operator;
+typedef __true_type has_trivial_destructor;
+typedef __true_type is_POD_type;
+};
+```
+```cpp
+__type_traits<double>::has_trivial_default_constructor;//调用特化版本的
+__type_traits<foo>::has_trivial_default_constructor;//由于未特化调用泛化版本
+```
+
+### Partial Specialization,偏特化
+```cpp
+template<class T,class Alloc = alloc>
+class vector{
+...
+};
+//偏特化
+template<class Alloc>
+class vector<bool,Alloc>{
+...
+}
+```
+
+### 分配器 allocators 
+#### 先谈operator new() 和 malloc
+operator new() 最终会调用malloc
+TO DO (存疑以后补充): [malloc 给的空间 比想要的数量还要多,会有附加的东西.]()
+
+问题1: malloc 会带来相对固定的额外开销(相对在padding填充部分),这样malloc额外开销所占比例取决于申请内存的大小,这样如果通过malloc创建大量size小的数据,就会产生特别巨大的额外开销,这样是不太理想的.
+
+##### VC6 STL 对 allocator 的使用
+```cpp
+template<class _Ty,class _A = allocator<_Ty> >
+class vector
+{
+...
+};
+
+template<class _Ty,class _A = allocator<_Ty> >
+class deque
+{
+...
+};
+```
+
+VC6+ 的allocator只是以`::operator new` `::operator delete` 完成allocate()和deallocate().没有任何特殊设计. 问题1问题没有解决
+
+##### BC5 STL 对allocator的使用
+```cpp
+template<class T,class Allocator _RWSTD_COMPLEX_DEFAULT(allocator<T>)>
+class vector...
+
+template<class T,class Allocator _RWSTD_COMPLEX_DEFAULT(allocator<T>)>
+class list...
+
+template<class T,class Allocator _RWSTD_COMPLEX_DEFAULT(allocator<T>)>
+class deque...
+
+//在<stdcomp.h>中有 #define _RWSTD_COMPLEX_DEFAULT(a) =a
+```
+```cpp
+//示例分配512 ints
+int *p = allocator<int>.()allocate(512);
+allocator<int>().deallocate(p,512)
+```
+
+BC5所附标准库,其allocator实现在(`<memory.stl>`)
+BC++ 的allocator只是以`::operator new` `::operator delete` 完成allocate()和deallocate().没有任何特殊设计.问题1问题没有解决
+
+
+G2.9 所附标标准库,其allocator实现如下(`<defalloc.h>`)
+*GCC2.9的allocator只是以`::operator new` 和`::operator delete`完成`allocate()`和`deallocate()`,没有任何特殊设计*
+
+G++<defalloc.h>中声明 
+```
+//我们不赞成包含此文件,这是原始的HP default allocator.提供它只是为了
+//回溯兼容
+//
+//DO NOT USE THIS FILE 不要使用这个文件,除非你手上的容器以旧式做法
+//完成--那就需要一个拥有HP-style interface 的空间配置器.SGI STL 使用
+//不同的 allocator 接口.SGI-style allocators 不带有任何与对象型别相关
+//的参数:它们只想赢void*指针(侯捷注:如果是标准接口,就会响应一个
+//"指向对象型别"的指针,T*).此文件并不包含于其他任何SGI STL 头文件
+```
+
+#### G2.9的 alloc (`<stl_alloc.h>`)
+目的 尽量减少malloc的次数 减少cookie
+图示 free_list:
+![alloc 图示](http://img.blog.csdn.net/20170831132113941?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd2VpeGluXzM5MDI5NTUy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+此处作大体了解,以后再内存管理部分深入
+
+G4.9STL 对allocator的使用
+```cpp
+template<typename _Tp,typename _Alloc = std::allocator<_TP>>
+class vector : protected _Vector_base<_Tp,Alloc>
+{
+...
+};
+
+//# define __allocator_base __gun_cxx::new_allocator
+
+
+```
+发现G4.9 用回了了以前的会产生问题1的版本.
+G4.9 的标准库 有许多extention allocators 其中`__pool_alloc ` 就是G2.9的alloc
+
+```cpp
+//用例
+vector<string,__gun_cxx::__pool_alloc<string>>vec;
+```
+
+### 容器-结构与分类
+1.  (请看笔记五)
+
+2.  ![容器关系](http://img.blog.csdn.net/20170831134229809?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd2VpeGluXzM5MDI5NTUy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+```
+在 C++11中,slist 名为forward_list, hash_set,hash_map 名为unorderd_set,unordered_map,hash_multiset,hash_multimap 名为unordered_multiset,unordered_multimap;且新添array.
+```
+
+### 容器 - list 双向链表
+刻意在环状list尾端加一空白结点,用以符合STL 前闭后开 区间
+```cpp
+//2.91版
+template<class T>
+struct __list_node{
+typedef void* void_pointer;
+void_pointer prev;
+void_pointer next;
+T data;
+}
+
+template<class T,class Alloc=alloc>
+class list{
+protected:
+typedef __list_node<T> list_node;
+public:
+typedef list_node* link_type;
+typedef __list_iterator<T,T&,T*> iterator;//疑问 没必要三个参数 G4.9版本变成了一个模板参数此行变成 typedif _list_iterator<_Tp>iterator;
+protected:
+link_type node;
+...
+};
+
+template<class T,class Ref,class Ptr>
+struct __list_iterator{
+typedef T value_type;
+typedef Ptr pointer;
+typedef Ref reference;
+};
+
+//tips:不可以连续2个或两个以上++
+self operator++(int)后++
+self operator++()前++
+
+reference operator*() const{
+return (*node).data;
+}
+
+pointer operator->() const{
+return &(operator*());
+}
+```
+G4.9相比于G2.9:
+* 模板参数只有一个(易理解)
+* node 结构有其parent
+* node 的成员的type较为精确
+
+4.9版的list:
+![G4.9 list](http://img.blog.csdn.net/20170831144615619?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd2VpeGluXzM5MDI5NTUy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+G2.9是一个指针指向一个结点,G4.9 向上找父类data,发现是两个指针,结构上有些许区别,倒是sizeof 不同了,两倍关系.
+
+### Iterator 需要遵循的原则
+* 迭代器相应型别之一: **value type**
+所谓value type,是指迭代器所指对象的型别.任何一个打算与STL算法有完美搭配的class,都应该定义自己的value type内嵌型别.
+*  迭代器相应型别之二:**difference type**
+difference type 用来表示两个迭代器之间的距离,因此它也可以用来表示一个容器的最大容量,因为对于连续空间容器而言,头尾之间的距离就是其最大容量.如果一个泛型算法提供技术功能,例如STL的count(),其传回值就必须使用迭代器的difference type
+* 迭代器相应型别之三:**reference type**
+从"迭代器所指之物的内容是否允许改变"的角度观之,迭代器分为两种:不允许改变"所指对象之内容"者,称为constant iterator,例如 const int *pic;允许改变"所指对象之内容"者,称为mutable iterators,例如 int *pi.当我们对一个mutable iterators 进行提领操作时,获得的不应该是一个rvalue(右值),应该是一个lvalue(左值),因为rvalue不允许赋值操作,左值才允许
+* 迭代器相应型别之四:**pointer type**
+pointers和references在C++中有非常密切的关联.如果 "传回一个lvalue,令它代表p所指之物 是可能的",那么"传回一个lvalue,令它代表p所指之物的地址"也一定可以.也就是说,我们能够传回一个pointer,指向迭代器所指之物.
+
+* 迭代器相应型别之五: **iterator_category**
+根据移动特性与实施操作,迭代器被分为五类:
+ * Input Iterator :read only
+ * Output Iterator:write only
+ * Forward Iterator:允许"写入型"算法在此种迭代器所形成的取件进行读写操作.
+ * Bidirectional Iterator:可双向移动.
+ * Random Access Iterator:前四种迭代器都只供应一部分指针算数能力(前三种支持operator++,第四种再加上operator--),第五种涵盖所有指针算术能力,包括`p+n,p-n,p[n],p1-p1,p1<p2`.
+ 
+问题2:如果iterator并不是个class呢,例如native pointer(它被视为一种退化的iterator),没有以上五种型别.
+
+问题2 引出 Traits.
+
+### Traits 特性,特征,特质
+traits作为一个中介层必须有能力分辨它所获得的iterator是(1)class iterator T或是(2)native pointer to T.利用 partial specialization 可达到目标.
+
+```cpp
+//泛化
+template<class I>
+struct iterator_traits{
+typedef typename I::value_type value_type;
+typedef typename I::iterator_category iterator_catgory;
+typedef typename I::difference_type difference_type;
+typedef typename I::pointer pointer;
+typedef typename I::reference reference;
+}
+
+//两个 partial specialization
+
+//如果I是pointer to T
+template<class T>
+struct iterator_traits<T*>{
+typedef random_access_iterator_tag iterator_category;
+typedef T value_type;
+typedef ptrdiff_t difference_type;
+typedef T* pointer;
+typedef T& reference;
+};
+//如果I是pointer to const T
+template<class T>
+struct iterator_traits<const T*>{
+typedef random_access_iterator_tag iterator_category;
+typedef T value_type;//注意是T而不是const T why?问题3.
+typedef ptrdiff_t difference_type;
+typedef T* pointer;
+typedef T& reference;
+};
+
+template<typename I,...>
+void algorithm(...){
+typename iterator_traits<I>::value_type v1:
+}
+
+//回答问题3:value_type的主要目的是用来声明变量,而声明一个无法被赋值的变量没什么用,所以iterator(即便是constant iterator)的value type 不应该加上const.iterator 若是const int*,其value_type应该是int 而非const int.
+```
+
+### 各式各样的Traits
+* type traits
+* iterator  traits
+* char  traits
+* allocator  traits
+* pointer  traits
+* array  traits
+
+
+### 容器 - vector
+```cpp
+template<class T,class Alloc = alloc>
+class vector{
+public:
+typedef T value_type;
+typedef value_type* iterator;
+typedef value_type& reference;
+typedef size_t size_type;
+protected:
+iterator start;
+iterator finish;
+iterator end_of_storage;
+public:
+iterator begin(){ return start;}
+iterator end(){ return finish;}
+size_type size() const
+{ return size_type(end()-begin());}
+size_type capcity() const
+{return size_type(end_of_storge-begin());}
+bool empty() const{return begin() == end();}
+reference operator[] (size_type n){return *(begin()+n);}
+reference front(){return *begin();}
+reference back() { return *(end()-1);}
+}
+
+
+void push_back(const T& x){
+if(finish!=end_of_storage){//尚有备用空间
+construct(finish,x);
+++finish;
+}
+else//已无备用空间
+insert_aux(end(),x);//此处两倍增长
+
+//关键代码
+{
+...
+const size_type old_size = size();
+const size_type len = old_size ! = 0 ?2*old_size:1;//考虑0
+iterator new_start = data_allocator::allocate(len)
+iterator new_finish = new_start;
+try{
+//将原vector的内容拷贝到新vector
+new_finish = uninitialized_copy(start,position,new_start);
+construct(new_finish,x);//为新元素设初值x
+++new_finish;//调整水位
+//拷贝安插点后的原内容(因为它也可能被insert(p,x)呼叫.
+new_finish = uninitialized_copy(position,finish,new_finish);
+}catch(...)
+//"commit or rollback"semantics.
+destroy(new_start,new_finnish);
+data_allocator::deallocate(new_start,len);
+throw;
+}
+```
+
+### vector's iterator
+由于vector内空间连续,所以可以用指针作iterator.
+实际上G2.9也是这么做的
+
+![G4.9](http://img.blog.csdn.net/20170831172316304?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd2VpeGluXzM5MDI5NTUy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+### 容器array
+需要包装一下,以享受标准库的算法.
+TR1
+```cpp
+template<typename _Tp,std::size_t _Nm>
+struct array
+{
+typedef _Tp value_type;
+typedef _Tp* pointer;
+typedef value_type* iterator;
+//support for zero-sized arrays mandatory.
+value_type _M_instance[_Nm? _Nm:1];
+
+iterator begin()
+{ return iterator(&_M_instance[0]);}
+iterator end()
+{return iterator(&_M_instance[_Nm];}
+...
+```
+### forward_list
+参照list,forward_list 只能往前走.
