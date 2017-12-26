@@ -43,26 +43,32 @@ $ source ~/.rvm/scripts/rvm
 ```
 
 2. 安装ruby
+获取ruby可安装的版本信息
 ```
-# 获取ruby可安装的版本信息
-rvm list known 
+rvm list known
+```
 
-#安装一个ruby版本 比如版本号为2.1.4
+安装一个ruby版本 比如版本号为2.1.4
+```
 rvn install 2.1.4
-
-# 设置默认版本,可用这条命令
-
+```
+设置默认版本,可用这条命令
+```
 rvm use 2.1.4 --default
+```
 
-# 查看已安装的ruby
-
+查看已安装的ruby
+```
 rvm list
+```
 
-# 卸载一个已安装ruby版本
+卸载一个已安装ruby版本
+```
 rvm remove 2.1.4
+```
 
-# 更换源 由于国内被墙
-
+更换源 由于国内被墙
+```
 $ gem update --system
 $ gem uninstall rubygems-update
 $ gem sources --add https://gems.ruby-china.org/ --remove https://rubygems.org/
@@ -73,10 +79,10 @@ $ gem sources -l
 
 3. 安装Cocoapods
 ```
-# 升级Ruby环境
+升级Ruby环境
 $ sudo gem update --system
 
-# 安装CocoaPods
+安装CocoaPods
 $ sudo gem update --system
 $ pod setup
 ```
@@ -88,7 +94,7 @@ macOS 缺少的套件管理工具
 
 $ brew install wget
 
-# Homebrew 會將 packages 安裝在他們自己的目錄，然後把檔案 symlink 到 /usr/local 下。
+Homebrew 會將 packages 安裝在他們自己的目錄，然後把檔案 symlink 到 /usr/local 下。
 $ cd /usr/local
 $ find Cellar
 Cellar/wget/1.16.1
@@ -98,5 +104,5 @@ Cellar/wget/1.16.1/share/man/man1/wget.1
 $ ls -l bin
 bin/wget -> ../Cellar/wget/1.16.1/bin/wget
 
-# url :https://brew.sh/index_zh-tw.html
+url :https://brew.sh/index_zh-tw.html
 ```
