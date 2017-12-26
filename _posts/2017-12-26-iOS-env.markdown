@@ -1,0 +1,102 @@
+---
+layout:     post
+title:      "iOS开发环境配置"
+subtitle:   一些关于iOS开发的环境配置
+date:       2017-09-14
+author:     "Iwiii"
+header-img: "img/post-bg-unix-linux.jpg"
+tags:
+    - iOS
+    - Commondline
+---
+
+> This document is not completed and will be updated anytime.
+# 终端下基本命令
+1. 列出文件
+ls 参数 目录名        例: 看看驱动目录下有什么:ls /System/Library/Extensions
+参数 -w 显示中文，-l 详细信息， -a 包括隐藏文件
+2. 转换目录     
+cd    例：想到驱动目录下溜达一圈   cd /System/Library/Extensions
+3. 建立新目录
+mkdir 目录名     例：在驱动目录下建一个备份目录 backup     mkdir /System/Library/Extensions/backup
+在桌面上建一个备份目录 backup    mkdir /User/用户名/Desktop/backup
+4. 拷贝文件
+cp 参数 源文件 目标文件    例：想把桌面的Natit.kext 拷贝到驱动目录中  cp -R /User/用户名/Desktop/Natit.kext /System/Library/Extensions
+参数R表示对目录进行递归操作，kext在图形界面下看起来是个文件，实际上是个文件夹。
+把驱动目录下的所有文件备份到桌面backup
+cp -R /System/Library/Extensions/* /User/用户名/Desktop/backup
+5. 删除文件
+rm 参数 文件   例：想删除驱动的缓存  rm -rf /System/Library/Extensions.kextcache     rm -rf /System/Library/Extensions.mkext
+参数－rf 表示递归和强制，千万要小心使用，如果执行了 rm -rf / 你的系统就全没了
+6. 移动文件
+mv 文件   例：想把AppleHDA.Kext 移到桌面    mv /System/Library/Extensions/AppleHDA.kext /User/用户名/Desktop
+想把AppleHDA.Kext 移到备份目录中   mv /System/Library/Extensions/AppleHDA.kext /System/Library/Extensions/backup
+7. 文本编辑
+nano 文件名   例：编辑natit Info.plist     nano /System/Library/Extensions/Natit.kext/Info.plist
+
+# Cocoapods
+## 下载和安装
+1. 安装RVM
+```
+$ curl -L get.rvm.io | bash -s stable
+$ source ~/.rvm/scripts/rvm
+```
+
+2. 安装ruby
+```
+# 获取ruby可安装的版本信息
+rvm list known 
+
+#安装一个ruby版本 比如版本号为2.1.4
+rvn install 2.1.4
+
+# 设置默认版本,可用这条命令
+
+rvm use 2.1.4 --default
+
+# 查看已安装的ruby
+
+rvm list
+
+# 卸载一个已安装ruby版本
+rvm remove 2.1.4
+
+# 更换源 由于国内被墙
+
+$ gem update --system
+$ gem uninstall rubygems-update
+$ gem sources --add https://gems.ruby-china.org/ --remove https://rubygems.org/
+$ gem sources -l
+
+
+```
+
+3. 安装Cocoapods
+```
+# 升级Ruby环境
+$ sudo gem update --system
+
+# 安装CocoaPods
+$ sudo gem update --system
+$ pod setup
+```
+
+# Homebrew
+macOS 缺少的套件管理工具
+```
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+$ brew install wget
+
+# Homebrew 會將 packages 安裝在他們自己的目錄，然後把檔案 symlink 到 /usr/local 下。
+$ cd /usr/local
+$ find Cellar
+Cellar/wget/1.16.1
+Cellar/wget/1.16.1/bin/wget
+Cellar/wget/1.16.1/share/man/man1/wget.1
+
+$ ls -l bin
+bin/wget -> ../Cellar/wget/1.16.1/bin/wget
+
+# url :https://brew.sh/index_zh-tw.html
+```
