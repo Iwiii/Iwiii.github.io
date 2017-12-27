@@ -1,0 +1,28 @@
+---
+layout:     post
+title:      "iOS开发环境配置"
+subtitle:   开发中遇到的问题
+date:       2017-12-27
+author:     "Iwiii"
+header-img: "img/post-bg-unix-linux.jpg"
+tags:
+    - iOS
+---
+
+> This document is not completed and will be updated anytime.
+
+## 2017-12-27
+### iOS11 改变cell 高度时 TableView跳动。
+```
+if#available(iOS11.0, *) {
+
+UITableView.appearance().estimatedRowHeight = 0;
+
+UITableView.appearance().estimatedSectionFooterHeight = 0;
+
+UITableView.appearance().estimatedSectionHeaderHeight = 0;
+
+UITableView.appearance().contentInsetAdjustmentBehavior = .never
+
+}
+```
