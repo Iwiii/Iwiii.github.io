@@ -2,7 +2,7 @@
 layout:     post
 title:      "iOS开发环境配置"
 subtitle:   一些关于iOS开发的环境配置
-date:       2017-09-14
+date:       2017-12-27
 author:     "Iwiii"
 header-img: "img/post-bg-unix-linux.jpg"
 tags:
@@ -70,13 +70,12 @@ rvm remove 2.1.4
 ```
 
 更换源 由于国内被墙
+
 ```
 $ gem update --system
 $ gem uninstall rubygems-update
 $ gem sources --add https://gems.ruby-china.org/ --remove https://rubygems.org/
 $ gem sources -l
-
-
 ```
 
 3. 安装Cocoapods
