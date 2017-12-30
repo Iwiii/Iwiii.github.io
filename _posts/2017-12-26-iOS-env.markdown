@@ -33,6 +33,8 @@ mv 文件   例：想把AppleHDA.Kext 移到桌面    mv /System/Library/Extensi
 想把AppleHDA.Kext 移到备份目录中   mv /System/Library/Extensions/AppleHDA.kext /System/Library/Extensions/backup
 7. 文本编辑
 nano 文件名   例：编辑natit Info.plist     nano /System/Library/Extensions/Natit.kext/Info.plist
+8. 允许安装任何来源
+sudo spctl --master -disable
 
 # Cocoapods
 ## 下载和安装
@@ -50,7 +52,7 @@ rvm list known
 
 安装一个ruby版本 比如版本号为2.1.4
 ```
-rvn install 2.1.4
+rvm install 2.1.4
 ```
 设置默认版本,可用这条命令
 ```
