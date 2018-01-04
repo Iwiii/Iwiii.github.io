@@ -15,12 +15,52 @@ tags:
 ### iOS11 改变cell 高度时 TableView跳动。
 
 ```
-self.tableView.estimatedRowHeight = 0;
+if (@available(iOS 11.0, *)){
 
-self.tableView.estimatedSectionFooterHeight = 0;
-
-self.tableView.estimatedSectionHeaderHeight = 0;
-
-self.tableView.contentInsetAdjustmentBehavior = .never
+self.estimatedRowHeight = 0;
+self.estimatedSectionHeaderHeight = 0;
+self.estimatedSectionFooterHeight = 0;
+}
 
 ```
+
+### 接上面的问题 场景是项目中的tableView没有基类 ,总共有82个tableView 问怎么给这82个tableVIiew作适配
+
+1. runtime ?
+2. catagory ?
+3. 建一个基类  然后一个个替换 ?
+
+我的选择为3,但是实际上也没有费多少事 后面会讲.
+想当然会用 1 和 2 来解决, 但我尝试失败 ,如果有成功的请附上代码.
+
+下面讲下我的做法:
+
+### sublime 正则替换
+
+ 1 . 考虑到必须要有个基类才行了 我就没在runtime上太过纠结了,那么给大量的tableview做替换无疑是苦力活,我就想到了正则替换.
+ 2 .Xcode中我没找到正则替换功能,转而目光投向sublime
+ 3 .考虑正则替换表达式:
+ 我们要替换的形式主要是 这样:
+ ```
+ UITableView * someTableView; ==> BaseTableView *someTableView;
+ UITableView * someTableView = [[UITableView alloc]... ==>  UITableView * someTableView = [[BaseTableView alloc]...
+ 
+ 这里考虑到这个项目经手过很多人,代码极不规范,写正则的时候要注意好空格 (实际上查找的时候确实有书写方式不太一样的结果)
+ 打开sublime 将需要修改的项目文件拖进去, 我直接拖了出去pod 的整个项目 然后command + Shift + F 调出查找替换
+ 我的正则是 :
+ Find :   UITableView\s*\*\s*(\w+;)
+ Replace :BaseTableView * $1;
+ 
+ Find :   (=\s*\[\[\s*)UITableView(\s*alloc\s*\])
+ Replace :$1BaseTableView$2
+ 
+ 最后保存就大功告成了,切记要做好版本管理,好做回退,不然出个错那就完蛋了
+ 
+ plus : $1 $2 为"()"中不变的部分 这样就可以做部分替换了 ,至于创建基类和将.h文件放到.pch文件中我就不详细赘述了
+ ```
+ 
+ ## 2018-01-04
+ ### 直播项目退出直播后 然后程序退到后台 上面会有红条
+ 停掉了直播的推流还是会有,消失的不是很及时,说明跟流没关系,最后同事查到了是音频采集问题,只要音频还在采集就会有.然后试了下微信发语音条立即切到后台,发现红条.
+ 然后我去把音频采集在一开始就不做,发现不会有红条.
+ 这样在结束直播的时候调用停止音频采集的方法就可以了
