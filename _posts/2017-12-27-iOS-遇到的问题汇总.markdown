@@ -65,3 +65,45 @@ self.estimatedSectionFooterHeight = 0;
  停掉了直播的推流还是会有,消失的不是很及时,说明跟流没关系,最后同事查到了是音频采集问题,只要音频还在采集就会有.然后试了下微信发语音条立即切到后台,发现红条.
  然后我去把音频采集在一开始就不做,发现不会有红条.
  这样在结束直播的时候调用停止音频采集的方法就可以了
+
+## 2018-01-19
+### 一段文字中有两个数字 文字是一种颜色 数字是另一种颜色
+``` OC
+ NSMutableAttributedString *attribuStr = [[NSMutableAttributedString alloc] initWithString:titleStr attributes:@{NSFontAttributeName:T_FONT(13),NSForegroundColorAttributeName:HEX_COLOR(0x5b5b5b)}];
+[attribuStr setAttributes:@{NSForegroundColorAttributeName:[UIColor redColor]}
+range:NSMakeRange([attribuStr.string rangeOfString:num1].location, [attribuStr.string rangeOfString:num1].length)];
+[attribuStr setAttributes:@{NSForegroundColorAttributeName:[UIColor redColor]}
+range:NSMakeRange([attribuStr.string rangeOfString:num2].location, [attribuStr.string rangeOfString:num1].length)];
+
+```
+出现问题两种数字是一样的话 就只让第一个数字变色了
+``` OC
+
+ NSMutableAttributedString *attribuStr = [[NSMutableAttributedString alloc] initWithString:titleStr attributes:@{NSFontAttributeName:T_FONT(13),NSForegroundColorAttributeName:HEX_COLOR(0x5b5b5b)}];
+[attribuStr setAttributes:@{NSForegroundColorAttributeName:[UIColor redColor]}
+range:NSMakeRange([attribuStr.string rangeOfString:num1].location, [attribuStr.string rangeOfString:num1].length)];
+[attribuStr setAttributes:@{NSForegroundColorAttributeName:[UIColor redColor]}
+range:NSMakeRange([attribuStr.string rangeOfString:num2 options:NSBackwardsSearch].location, [attribuStr.string rangeOfString:num1].length)];
+
+```
+这里`rangeOfString`这个方法有可选项
+```
+typedef NS_OPTIONS(NSUInteger, NSStringCompareOptions) {
+    NSCaseInsensitiveSearch = 1,
+    NSLiteralSearch = 2,		/* Exact character-by-character equivalence */
+    NSBackwardsSearch = 4,		/* Search from end of source string */
+    NSAnchoredSearch = 8,		/* Search is limited to start (or end, if NSBackwardsSearch) of source string */
+    NSNumericSearch = 64,		/* Added in 10.2; Numbers within strings are compared using numeric value, that is, Foo2.txt < Foo7.txt < Foo25.txt; only applies to compare methods, not find */
+    NSDiacriticInsensitiveSearch API_AVAILABLE(macos(10.5), ios(2.0), watchos(2.0), tvos(9.0)) = 128, /* If specified, ignores diacritics (o-umlaut == o) */
+    NSWidthInsensitiveSearch API_AVAILABLE(macos(10.5), ios(2.0), watchos(2.0), tvos(9.0)) = 256, /* If specified, ignores width differences ('a' == UFF41) */
+    NSForcedOrderingSearch API_AVAILABLE(macos(10.5), ios(2.0), watchos(2.0), tvos(9.0)) = 512, /* If specified, comparisons are forced to return either NSOrderedAscending or NSOrderedDescending if the strings are equivalent but not strictly equal, for stability when sorting (e.g. "aaa" > "AAA" with NSCaseInsensitiveSearch specified) */
+    NSRegularExpressionSearch API_AVAILABLE(macos(10.7), ios(3.2), watchos(2.0), tvos(9.0)) = 1024    /* Applies to rangeOfString:..., stringByReplacingOccurrencesOfString:..., and replaceOccurrencesOfString:... methods only; the search string is treated as an ICU-compatible regular expression; if set, no other options can apply except NSCaseInsensitiveSearch and NSAnchoredSearch */
+};
+```
+
+我选择的是NSBackwardSearch 从后往前找第一个匹配 这样就好了
+我上面的场景是数字是什么已经知道了.
+
+### 那如果不知道数字是什么,并且有多个数字呢? 比如给出一大段文字,要求里面所有的数字都变成红色文字都是灰色?
+关键: 找出所有数字 的range
+
