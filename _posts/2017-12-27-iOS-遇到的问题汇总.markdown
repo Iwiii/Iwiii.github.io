@@ -46,7 +46,7 @@ self.estimatedSectionFooterHeight = 0;
  UITableView * someTableView = [[UITableView alloc]... ==>  UITableView * someTableView = [[BaseTableView alloc]...
  
  这里考虑到这个项目经手过很多人,代码极不规范,写正则的时候要注意好空格 (实际上查找的时候确实有书写方式不太一样的结果)
- 打开sublime 将需要修改的项目文件拖进去, 我直接拖了出去pod 的整个项目 然后command + Shift + F 调出查找替换
+ 打开sublime 将需要修改的项目文件拖进去, 我直接拖了除去pod 的整个项目 然后command + Shift + F 调出查找替换
  我的正则是 :
  Find :   UITableView\s*\*\s*(\w+;)
  Replace :BaseTableView * $1;
@@ -58,6 +58,8 @@ self.estimatedSectionFooterHeight = 0;
  
  plus : $1 $2 为"()"中不变的部分 这样就可以做部分替换了 ,至于创建基类和将.h文件放到.pch文件中我就不详细赘述了
  ```
+ ### 2018-01-16
+ 更新: 可以利用 UIAppearance 协议修改 ! 只要满足这个协议,可以用+appearance 创建一个实例进行修改
  
  ## 2018-01-04
  ### 直播项目退出直播后 然后程序退到后台 上面会有红条
