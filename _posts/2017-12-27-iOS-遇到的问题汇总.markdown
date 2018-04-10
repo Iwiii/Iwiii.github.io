@@ -145,3 +145,10 @@ https://www.jianshu.com/p/97add04998ef
 ### 缺省页第三方库 DZNEmptyDataSource 以及其本身的缺陷以及修复
 ### 苹果应用内支付 的一些应对 苹果审核条款
 ### VFL语句
+### sqlite3.dylib: illegal multi-threaded access to database connection bug fixed with global setting
+```
+/*https://stackoverflow.com/questions/49198831/sqlite3-dylib-illegal-multi-threaded-access-to-database-connection
+*sqlite3.dylib: illegal multi-threaded access to database connection bug fixed with global setting
+*/
+sqlite3_config(SQLITE_CONFIG_SERIALIZED);
+```
