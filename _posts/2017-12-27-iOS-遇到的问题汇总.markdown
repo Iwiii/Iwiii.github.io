@@ -152,3 +152,5 @@ https://www.jianshu.com/p/97add04998ef
 */
 sqlite3_config(SQLITE_CONFIG_SERIALIZED);
 ```
+
+### __IPHONE_OS_VERSION_MAX_ALLOWED 预编译宏 当前开发环境支持的最高版本 不是设备支持的最高版本
